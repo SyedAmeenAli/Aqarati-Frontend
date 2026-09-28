@@ -50,11 +50,10 @@ class _AqaratiStartupVideoState extends State<AqaratiStartupVideo> with SingleTi
     final controller = VideoPlayerController.asset('assets/branding/aqarati_startup.mp4');
     _controller = controller;
     try {
-      await controller.initialize();
+      await controller.initialize().timeout(const Duration(seconds: 4));
       if (!mounted) return;
       controller.setLooping(false);
-      // Browser/platform autoplay policies can block audio-with-video; muting
-      // on failure keeps the visual opening working even if audio is blocked.
+      await controller.setVolume(0);
       await controller.play();
       controller.addListener(_onTick);
       setState(() => _ready = true);
