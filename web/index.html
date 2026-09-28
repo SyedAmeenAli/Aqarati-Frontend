@@ -20,6 +20,14 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
+  <!-- Tell browsers this page already handles both color schemes itself, so
+       mobile Chrome's "force dark mode for web content" heuristic does not
+       try to repaint/invert the canvas Flutter renders into — that
+       heuristic is a known cause of a WebGL canvas coming out solid black
+       with no errors on Android Chrome. -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -37,6 +45,9 @@
        not the JS Maps SDK. See AQARATI_GOOGLE_MAPS_IMPLEMENTATION.md. -->
 
   <style>
+    html, body {
+      background-color: #FAF8F5;
+    }
     #boot-diagnostics {
       display: none;
       position: fixed;
