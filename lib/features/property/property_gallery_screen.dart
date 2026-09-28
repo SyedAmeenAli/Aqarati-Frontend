@@ -225,6 +225,7 @@ class _VideoViewState extends State<_VideoView> {
     if (widget.videoUrls.isEmpty) return;
     final controller = VideoPlayerController.asset(widget.videoUrls[i]);
     _controller = controller;
+    controller.setVolume(0);
     controller.initialize().then((_) {
       if (mounted) setState(() {});
     });
