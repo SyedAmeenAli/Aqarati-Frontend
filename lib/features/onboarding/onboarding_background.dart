@@ -20,11 +20,7 @@ class AqaratiOnboardingBackground extends StatelessWidget {
 
     return Stack(
       children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 340,
+        Positioned.fill(
           child: Image.asset(
             asset,
             fit: BoxFit.cover,
@@ -32,11 +28,7 @@ class AqaratiOnboardingBackground extends StatelessWidget {
             errorBuilder: (context, error, stack) => Container(color: fadeColor),
           ),
         ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 340,
+        Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -44,10 +36,12 @@ class AqaratiOnboardingBackground extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   fadeColor.withValues(alpha: 0.0),
-                  fadeColor.withValues(alpha: isDark ? 0.25 : 0.1),
-                  fadeColor.withValues(alpha: isDark ? 0.75 : 0.55),
+                  fadeColor.withValues(alpha: isDark ? 0.2 : 0.05),
+                  fadeColor.withValues(alpha: isDark ? 0.55 : 0.4),
+                  fadeColor.withValues(alpha: isDark ? 0.92 : 0.88),
+                  fadeColor,
                 ],
-                stops: const [0.0, 0.7, 1.0],
+                stops: const [0.0, 0.32, 0.46, 0.58, 0.66],
               ),
             ),
           ),

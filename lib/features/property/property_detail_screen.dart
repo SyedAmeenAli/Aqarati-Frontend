@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
+import '../../core/widgets/aqarati_map_view.dart';
 import '../../core/widgets/auth_gate_sheet.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/business.dart';
@@ -147,6 +149,28 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                         spacing: AppSpacing.sm,
                         runSpacing: AppSpacing.sm,
                         children: property.amenities.map((a) => Chip(label: Text(a), backgroundColor: AppColors.sand)).toList(),
+                      ),
+                    ],
+                    if (property.latitude != null && property.longitude != null) ...[
+                      const Divider(height: AppSpacing.xxxl),
+                      Text('Location', style: theme.textTheme.titleLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(property.locationLabel, style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(
+                        height: 180,
+                        child: AqaratiMapView(
+                          initialCenter: LatLng(property.latitude!, property.longitude!),
+                          initialZoom: 14,
+                          interactive: false,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          markers: {
+                            Marker(
+                              markerId: MarkerId(property.id),
+                              position: LatLng(property.latitude!, property.longitude!),
+                            ),
+                          },
+                        ),
                       ),
                     ],
                     if (property.transactionType == TransactionType.buy) ...[
