@@ -41,7 +41,16 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/professionals',
-      builder: (context, state) => const ProfessionalDiscoveryScreen(),
+      builder: (context, state) {
+        final categoryParam = state.uri.queryParameters['category'];
+        BusinessCategory? category;
+        if (categoryParam != null) {
+          for (final c in BusinessCategory.values) {
+            if (c.name == categoryParam) category = c;
+          }
+        }
+        return ProfessionalDiscoveryScreen(initialCategory: category);
+      },
     ),
     GoRoute(
       path: '/business/:id',

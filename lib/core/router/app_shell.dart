@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/owner/property_creation_flow.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_spacing.dart';
@@ -74,12 +75,20 @@ class AppShell extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.home_work_outlined, color: AppColors.primary),
                 title: const Text('List a property'),
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(builder: (context) => const PropertyCreationFlow()),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.design_services_outlined, color: AppColors.primary),
                 title: const Text('Request a service'),
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/professionals');
+                },
               ),
             ],
           ),

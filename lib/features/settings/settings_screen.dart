@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../data/models/identity_verification.dart';
 import '../../data/repositories/app_state_providers.dart';
 import 'privacy_screen.dart';
 import 'security_screen.dart';
@@ -132,7 +131,7 @@ class SettingsScreen extends ConsumerWidget {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
-              ref.read(currentUserProvider.notifier).state = User.guest;
+              ref.read(currentUserProvider.notifier).signOut();
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
             child: const Text('Sign Out Account'),

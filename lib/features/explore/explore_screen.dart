@@ -176,7 +176,7 @@ class _ProfessionalsTab extends StatelessWidget {
                 .map((c) => _ListTile(
                       icon: c.$2,
                       label: c.$1.label,
-                      onTap: () => context.push('/professionals'),
+                      onTap: () => context.push('/professionals?category=${c.$1.name}'),
                       chevron: true,
                     ))
                 .toList(),
@@ -184,6 +184,33 @@ class _ProfessionalsTab extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Maps the finer-grained service list onto the business categories that
+/// actually exist in the professional directory — ac/plumbing/electrical/
+/// painting/cleaning/pestControl/landscaping/generalMaintenance are all
+/// trades covered by maintenance businesses, since that's the level of
+/// granularity the mock business data supports.
+BusinessCategory _businessCategoryFor(ServiceCategory service) {
+  switch (service) {
+    case ServiceCategory.architecture:
+      return BusinessCategory.architecture;
+    case ServiceCategory.construction:
+      return BusinessCategory.construction;
+    case ServiceCategory.interiorDesign:
+      return BusinessCategory.interiorDesign;
+    case ServiceCategory.exteriorDesign:
+      return BusinessCategory.exteriorDesign;
+    case ServiceCategory.ac:
+    case ServiceCategory.plumbing:
+    case ServiceCategory.electrical:
+    case ServiceCategory.painting:
+    case ServiceCategory.cleaning:
+    case ServiceCategory.pestControl:
+    case ServiceCategory.landscaping:
+    case ServiceCategory.generalMaintenance:
+      return BusinessCategory.maintenance;
   }
 }
 
@@ -202,7 +229,7 @@ class _ServicesTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Column(
             children: categories
-                .map((c) => _ListTile(icon: c.$2, label: c.$1.label, onTap: () => context.push('/professionals'), chevron: true))
+                .map((c) => _ListTile(icon: c.$2, label: c.$1.label, onTap: () => context.push('/professionals?category=${_businessCategoryFor(c.$1).name}'), chevron: true))
                 .toList(),
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/booking.dart';
 import '../models/enums.dart';
 import '../models/money.dart';
@@ -7,7 +8,42 @@ import '../models/identity_verification.dart';
 import '../../features/onboarding/onboarding_preferences.dart';
 
 /// The signed-in user — guest until THEQA identity verification succeeds.
-final currentUserProvider = StateProvider<User>((ref) => User.guest);
+/// Persisted so a completed THEQA verification survives app restarts
+/// instead of asking again every launch.
+final currentUserProvider = StateNotifierProvider<CurrentUserNotifier, User>((ref) => CurrentUserNotifier());
+
+class CurrentUserNotifier extends StateNotifier<User> {
+  CurrentUserNotifier() : super(User.guest) {
+    _load();
+  }
+
+  static const _verifiedKey = 'aqarati_user_verified';
+  static const _nameKey = 'aqarati_user_name';
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_verifiedKey) == true) {
+      state = User(
+        id: 'u1',
+        name: prefs.getString(_nameKey) ?? 'Faisal Al-Said',
+        identity: const IdentityVerification(status: VerificationStatus.verified, method: 'qr'),
+      );
+    }
+  }
+
+  Future<void> signIn(User user) async {
+    state = user;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_verifiedKey, true);
+    await prefs.setString(_nameKey, user.name);
+  }
+
+  Future<void> signOut() async {
+    state = User.guest;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_verifiedKey, false);
+  }
+}
 
 /// Answers collected during onboarding — set once at `_finish` in
 /// OnboardingFlow, read by Home/Explore to make the intake actually change

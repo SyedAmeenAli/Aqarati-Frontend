@@ -4,6 +4,7 @@ import '../../data/models/enums.dart';
 import '../../data/models/identity_verification.dart';
 import '../../data/repositories/app_state_providers.dart';
 import '../../features/enquiry/my_enquiries_screen.dart';
+import '../../features/verification/google_signin_flow.dart';
 import '../../features/myhome/my_home_screen.dart';
 import '../../features/owner/owner_dashboard_screen.dart';
 import '../../features/saved/saved_screen.dart';
@@ -141,25 +142,50 @@ class _DrawerHeader extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
-          if (user.isGuest)
-            InkWell(
-              onTap: () async {
-                Navigator.of(context).pop();
-                final verified = await Navigator.of(context, rootNavigator: true).push<bool>(
-                  MaterialPageRoute(builder: (context) => const IdentityVerificationFlow()),
-                );
-                if (verified == true) {
-                  ref.read(currentUserProvider.notifier).state = User(
-                    id: 'u1',
-                    name: 'Faisal Al-Said',
-                    identity: IdentityVerification(status: VerificationStatus.verified, method: 'qr', confirmedAt: DateTime.now()),
-                  );
-                }
-              },
-              child: Text(
-                'Continue with THEQA',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, decoration: TextDecoration.underline),
-              ),
+          if (!user.identity.isConfirmed)
+            Wrap(
+              spacing: AppSpacing.md,
+              children: [
+                InkWell(
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    final verified = await Navigator.of(context, rootNavigator: true).push<bool>(
+                      MaterialPageRoute(builder: (context) => const IdentityVerificationFlow()),
+                    );
+                    if (verified == true) {
+                      ref.read(currentUserProvider.notifier).signIn(User(
+                        id: 'u1',
+                        name: 'Faisal Al-Said',
+                        identity: IdentityVerification(status: VerificationStatus.verified, method: 'qr', confirmedAt: DateTime.now()),
+                      ));
+                    }
+                  },
+                  child: Text(
+                    'Continue with THEQA',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, decoration: TextDecoration.underline),
+                  ),
+                ),
+                if (user.isGuest)
+                  InkWell(
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      final name = await Navigator.of(context, rootNavigator: true).push<String>(
+                        MaterialPageRoute(builder: (context) => const GoogleSignInFlow()),
+                      );
+                      if (name != null) {
+                        ref.read(currentUserProvider.notifier).signIn(User(
+                          id: 'u2',
+                          name: name,
+                          identity: const IdentityVerification(status: VerificationStatus.unverified),
+                        ));
+                      }
+                    },
+                    child: Text(
+                      'Continue with Google',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, decoration: TextDecoration.underline),
+                    ),
+                  ),
+              ],
             )
           else
             Text(

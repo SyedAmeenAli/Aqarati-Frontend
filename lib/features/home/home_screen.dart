@@ -36,12 +36,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   TransactionType _selected = TransactionType.buy;
 
   static const _categories = [
-    (AppIcons.properties, 'Properties', 'assets/properties/p1/07_Waterfront_villa_with_infinity_pool.jpg'),
-    (AppIcons.developments, 'Developments', 'assets/businesses/b2/09_41_Residential_development_architec.jpg'),
-    (AppIcons.agents, 'Agents', 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg'),
-    (AppIcons.construction, 'Construction', 'assets/businesses/b2/05_Construction_site_with_tower_crane.jpg'),
-    (AppIcons.architecture, 'Architecture', 'assets/businesses/b1/05_Contemporary_architectural_facad.jpg'),
-    (AppIcons.design, 'Design', 'assets/businesses/b3/06_Styled_bedroom_interior_photography.jpg'),
+    (AppIcons.properties, 'Properties', 'assets/properties/p1/07_Waterfront_villa_with_infinity_pool.jpg', '/search'),
+    (AppIcons.developments, 'Developments', 'assets/businesses/b2/09_41_Residential_development_architec.jpg', '/professionals?category=propertyDevelopment'),
+    (AppIcons.agents, 'Agents', 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg', '/professionals?category=realEstateAgent'),
+    (AppIcons.construction, 'Construction', 'assets/businesses/b2/05_Construction_site_with_tower_crane.jpg', '/professionals?category=construction'),
+    (AppIcons.architecture, 'Architecture', 'assets/businesses/b1/05_Contemporary_architectural_facad.jpg', '/professionals?category=architecture'),
+    (AppIcons.design, 'Design', 'assets/businesses/b3/06_Styled_bedroom_interior_photography.jpg', '/professionals?category=interiorDesign'),
   ];
 
   @override
@@ -115,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisSpacing: AppSpacing.sm,
                       childAspectRatio: 2.2,
                       children: _categories
-                          .map((c) => AqaratiCategoryCard(icon: c.$1, label: c.$2, image: c.$3, onTap: () => context.push('/search')))
+                          .map((c) => AqaratiCategoryCard(icon: c.$1, label: c.$2, image: c.$3, onTap: () => context.push(c.$4)))
                           .toList(),
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -588,42 +588,38 @@ class _SponsoredCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: FractionallySizedBox(
-        widthFactor: 0.62,
-        child: ClipRRect(
+    return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Opening SAMA Airways...')),
         ),
         child: Stack(
-        children: [
-          AspectRatio(
-            aspectRatio: 2000 / 1125,
-            child: Image.asset(
-              'assets/ads/sama_airways_creative.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => Container(color: AppColors.neutral900),
+          fit: StackFit.passthrough,
+          children: [
+            AspectRatio(
+              aspectRatio: 2000 / 1125,
+              child: Image.asset(
+                'assets/ads/sama_airways_creative.jpg',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (context, error, stack) => Container(color: AppColors.neutral900),
+              ),
             ),
-          ),
-          Positioned(
-            left: AppSpacing.md,
-            top: AppSpacing.sm,
-            child: Text('SPONSORED', style: theme.textTheme.labelSmall?.copyWith(color: Colors.white, letterSpacing: 0.6)),
-          ),
-          Positioned(
-            left: AppSpacing.md,
-            bottom: AppSpacing.sm,
-            child: Text(
-              'Book First Class',
-              style: theme.textTheme.labelMedium?.copyWith(color: Colors.white, decoration: TextDecoration.underline),
+            Positioned(
+              left: AppSpacing.md,
+              top: AppSpacing.sm,
+              child: Text('SPONSORED', style: theme.textTheme.labelSmall?.copyWith(color: Colors.white, letterSpacing: 0.6)),
             ),
-          ),
-        ],
-        ),
-      ),
+            Positioned(
+              left: AppSpacing.md,
+              bottom: AppSpacing.sm,
+              child: Text(
+                'Book First Class',
+                style: theme.textTheme.labelMedium?.copyWith(color: Colors.white, decoration: TextDecoration.underline),
+              ),
+            ),
+          ],
         ),
       ),
     );

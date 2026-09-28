@@ -89,7 +89,7 @@ class _PropertyGalleryScreenState extends State<PropertyGalleryScreen> {
                   ),
                   if (!isFloorPlan && !isVideo && images.isNotEmpty)
                     Positioned(
-                      bottom: AppSpacing.md,
+                      top: AppSpacing.sm,
                       left: 0,
                       right: 0,
                       child: Center(

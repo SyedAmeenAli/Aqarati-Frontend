@@ -93,8 +93,8 @@ final List<Property> mockProperties = [
     videoUrls: _p1Videos,
     listedByBusinessId: 'b1',
     amenities: const ['Private pool', 'Marina view', 'Maid room', 'Garden'],
-    latitude: 23.6480,
-    longitude: 58.2661,
+    latitude: 23.6215,
+    longitude: 58.2840,
     description:
         'A spacious family villa set within the Al Mouj waterfront community, '
         'with private pool access and views over the marina.',
