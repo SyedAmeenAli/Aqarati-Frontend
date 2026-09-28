@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_asset_image.dart';
+import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/aqarati_category_card.dart';
 import '../../core/widgets/aqarati_map_view.dart';
 import '../../core/widgets/aqarati_logo.dart';
@@ -67,6 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final featured = ref.watch(featuredPropertiesProvider);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -299,6 +301,13 @@ class _HomeTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+          icon: Icon(Icons.menu_rounded, color: AppColors.charcoal, size: AppIconSize.md),
+        ),
+        const SizedBox(width: AppSpacing.sm),
         const AqaratiLogoMark(height: 26),
         const Spacer(),
         IconButton(

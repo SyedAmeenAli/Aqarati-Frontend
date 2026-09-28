@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/aqarati_search_field.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/enums.dart';
@@ -62,6 +63,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -70,7 +72,20 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Explore', style: theme.textTheme.headlineLarge),
+                  Row(
+                    children: [
+                      Builder(
+                        builder: (context) => IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          icon: Icon(Icons.menu_rounded, color: AppColors.charcoal, size: AppIconSize.md),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text('Explore', style: theme.textTheme.headlineLarge),
+                    ],
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     'Properties, people and services for your next move.',
@@ -134,7 +149,7 @@ class _PropertiesTab extends StatelessWidget {
             crossAxisSpacing: AppSpacing.md,
             childAspectRatio: 2.6,
             children: types
-                .map((t) => _ListTile(icon: t.$2, label: t.$1.label, onTap: () => context.push('/search')))
+                .map((t) => _ListTile(icon: t.$2, label: t.$1.label, onTap: () => context.push('/search?type=${t.$1.name}')))
                 .toList(),
           ),
         ),

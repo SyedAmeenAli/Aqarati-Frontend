@@ -20,8 +20,9 @@ import 'search_filters.dart';
 /// a "N properties" + Filter/Sort row, then bordered PropertyCard.list.
 class SearchResultsScreen extends ConsumerStatefulWidget {
   final String? initialQuery;
+  final PropertyType? initialPropertyType;
 
-  const SearchResultsScreen({super.key, this.initialQuery});
+  const SearchResultsScreen({super.key, this.initialQuery, this.initialPropertyType});
 
   @override
   ConsumerState<SearchResultsScreen> createState() => _SearchResultsScreenState();
@@ -35,6 +36,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   void initState() {
     super.initState();
     _query = widget.initialQuery ?? '';
+    if (widget.initialPropertyType != null) _filters.propertyTypes.add(widget.initialPropertyType!);
   }
 
   List<Property> _applyFilters(List<Property> properties) {
