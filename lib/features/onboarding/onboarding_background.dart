@@ -10,13 +10,15 @@ import '../../core/theme/app_colors.dart';
 class AqaratiOnboardingBackground extends StatelessWidget {
   final String asset;
   final Widget child;
+  final bool emphasis;
 
-  const AqaratiOnboardingBackground({super.key, required this.asset, required this.child});
+  const AqaratiOnboardingBackground({super.key, required this.asset, required this.child, this.emphasis = false});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fadeColor = isDark ? AppColors.neutral900 : AppColors.background;
+    final stops = emphasis ? const [0.0, 0.42, 0.58, 0.72, 0.82] : const [0.0, 0.32, 0.46, 0.58, 0.66];
 
     return Stack(
       children: [
@@ -41,7 +43,7 @@ class AqaratiOnboardingBackground extends StatelessWidget {
                   fadeColor.withValues(alpha: isDark ? 0.92 : 0.88),
                   fadeColor,
                 ],
-                stops: const [0.0, 0.32, 0.46, 0.58, 0.66],
+                stops: stops,
               ),
             ),
           ),

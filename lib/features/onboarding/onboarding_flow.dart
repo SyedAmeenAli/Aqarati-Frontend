@@ -117,7 +117,11 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       backgroundColor: AppColors.background,
       body: asset == null
           ? SafeArea(child: _buildStep())
-          : AqaratiOnboardingBackground(asset: asset, child: SafeArea(child: _buildStep())),
+          : AqaratiOnboardingBackground(
+              asset: asset,
+              emphasis: _step == _Step.locationPermission,
+              child: SafeArea(child: _buildStep()),
+            ),
     );
   }
 
