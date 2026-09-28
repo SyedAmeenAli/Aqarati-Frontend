@@ -588,7 +588,11 @@ class _SponsoredCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ClipRRect(
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: FractionallySizedBox(
+        widthFactor: 0.62,
+        child: ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
@@ -618,6 +622,8 @@ class _SponsoredCard extends StatelessWidget {
             ),
           ),
         ],
+        ),
+      ),
         ),
       ),
     );
