@@ -35,8 +35,61 @@
   <!-- No Google Maps JS API script tag needed: web renders a real map via a
        keyless iframe embed (lib/core/widgets/aqarati_map_view_web.dart),
        not the JS Maps SDK. See AQARATI_GOOGLE_MAPS_IMPLEMENTATION.md. -->
+
+  <style>
+    #boot-diagnostics {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #fff;
+      color: #b00020;
+      font: 13px/1.5 monospace;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 <body>
+  <div id="boot-diagnostics"></div>
+  <script>
+    (function () {
+      var panel = document.getElementById('boot-diagnostics');
+      var lines = [];
+      function show(text) {
+        lines.push(text);
+        panel.textContent = lines.join('\n\n');
+        panel.style.display = 'block';
+      }
+      window.addEventListener('error', function (e) {
+        show('window error: ' + (e.message || e.error) + (e.filename ? '\nat ' + e.filename + ':' + e.lineno : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        show('unhandled rejection: ' + (e.reason && e.reason.stack ? e.reason.stack : e.reason));
+      });
+      var canvas = document.createElement('canvas');
+      var gl2 = canvas.getContext('webgl2');
+      var gl1 = !gl2 && canvas.getContext('webgl');
+      if (!gl2 && !gl1) {
+        show(
+          'WebGL is not available in this browser/device, so the app cannot render.\n' +
+          'User agent: ' + navigator.userAgent
+        );
+      }
+      setTimeout(function () {
+        var canvasEls = document.getElementsByTagName('flt-glass-pane').length +
+          document.querySelectorAll('flutter-view canvas, flt-scene-host canvas').length;
+        if (canvasEls === 0 && lines.length === 0) {
+          show(
+            'Flutter never attached a canvas after 8s (silent stall).\n' +
+            'User agent: ' + navigator.userAgent
+          );
+        }
+      }, 8000);
+    })();
+  </script>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
