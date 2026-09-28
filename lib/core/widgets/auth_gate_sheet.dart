@@ -49,11 +49,11 @@ Future<void> showAuthGateSheet(
                 MaterialPageRoute(builder: (context) => const IdentityVerificationFlow()),
               );
               if (verified == true) {
-                container.read(currentUserProvider.notifier).state = User(
+                container.read(currentUserProvider.notifier).signIn(User(
                   id: 'u1',
                   name: 'Faisal Al-Said',
                   identity: IdentityVerification(status: VerificationStatus.verified, method: 'qr', confirmedAt: DateTime.now()),
-                );
+                ));
                 onContinue();
               }
             },

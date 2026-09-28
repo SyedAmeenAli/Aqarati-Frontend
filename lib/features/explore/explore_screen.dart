@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/aqarati_search_field.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/enums.dart';
@@ -62,6 +63,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -70,7 +72,20 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Explore', style: theme.textTheme.headlineLarge),
+                  Row(
+                    children: [
+                      Builder(
+                        builder: (context) => IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          icon: Icon(Icons.menu_rounded, color: AppColors.charcoal, size: AppIconSize.md),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text('Explore', style: theme.textTheme.headlineLarge),
+                    ],
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     'Properties, people and services for your next move.',
@@ -134,7 +149,7 @@ class _PropertiesTab extends StatelessWidget {
             crossAxisSpacing: AppSpacing.md,
             childAspectRatio: 2.6,
             children: types
-                .map((t) => _ListTile(icon: t.$2, label: t.$1.label, onTap: () => context.push('/search')))
+                .map((t) => _ListTile(icon: t.$2, label: t.$1.label, onTap: () => context.push('/search?type=${t.$1.name}')))
                 .toList(),
           ),
         ),
@@ -161,7 +176,7 @@ class _ProfessionalsTab extends StatelessWidget {
                 .map((c) => _ListTile(
                       icon: c.$2,
                       label: c.$1.label,
-                      onTap: () => context.push('/professionals'),
+                      onTap: () => context.push('/professionals?category=${c.$1.name}'),
                       chevron: true,
                     ))
                 .toList(),
@@ -169,6 +184,33 @@ class _ProfessionalsTab extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Maps the finer-grained service list onto the business categories that
+/// actually exist in the professional directory — ac/plumbing/electrical/
+/// painting/cleaning/pestControl/landscaping/generalMaintenance are all
+/// trades covered by maintenance businesses, since that's the level of
+/// granularity the mock business data supports.
+BusinessCategory _businessCategoryFor(ServiceCategory service) {
+  switch (service) {
+    case ServiceCategory.architecture:
+      return BusinessCategory.architecture;
+    case ServiceCategory.construction:
+      return BusinessCategory.construction;
+    case ServiceCategory.interiorDesign:
+      return BusinessCategory.interiorDesign;
+    case ServiceCategory.exteriorDesign:
+      return BusinessCategory.exteriorDesign;
+    case ServiceCategory.ac:
+    case ServiceCategory.plumbing:
+    case ServiceCategory.electrical:
+    case ServiceCategory.painting:
+    case ServiceCategory.cleaning:
+    case ServiceCategory.pestControl:
+    case ServiceCategory.landscaping:
+    case ServiceCategory.generalMaintenance:
+      return BusinessCategory.maintenance;
   }
 }
 
@@ -187,7 +229,7 @@ class _ServicesTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Column(
             children: categories
-                .map((c) => _ListTile(icon: c.$2, label: c.$1.label, onTap: () => context.push('/professionals'), chevron: true))
+                .map((c) => _ListTile(icon: c.$2, label: c.$1.label, onTap: () => context.push('/professionals?category=${_businessCategoryFor(c.$1).name}'), chevron: true))
                 .toList(),
           ),
         ),

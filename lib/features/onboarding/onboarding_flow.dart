@@ -37,6 +37,7 @@ enum _Step {
   language,
   locationPermission,
   intro,
+  userType,
   transaction,
   propertyType,
   services,
@@ -63,6 +64,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
     _Step.language,
     _Step.locationPermission,
     _Step.intro,
+    _Step.userType,
     _Step.transaction,
     _Step.propertyType,
     _Step.services,
@@ -111,13 +113,51 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         body: AqaratiStartupVideo(onFinished: () => _goTo(_Step.language)),
       );
     }
-    final asset = _stepBackgrounds[_step];
+    final asset = _backgroundFor(_step);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: asset == null
           ? SafeArea(child: _buildStep())
           : AqaratiOnboardingBackground(asset: asset, child: SafeArea(child: _buildStep())),
     );
+  }
+
+  /// Most steps use one fixed photo, but Transaction and Property Type
+  /// reflect the user's actual choice — Buy/Rent/Lease and each property
+  /// type ship their own real photo, swapped live as the user taps.
+  String? _backgroundFor(_Step step) {
+    if (step == _Step.transaction) {
+      return switch (_prefs.transactionType) {
+        TransactionType.buy => 'assets/onboarding/onboarding_03_buy.jpg',
+        TransactionType.rent => 'assets/onboarding/onboarding_04_rent.jpg',
+        TransactionType.lease => 'assets/onboarding/onboarding_05_lease.jpg',
+        null => 'assets/onboarding/onboarding_02_intent.jpg',
+      };
+    }
+    if (step == _Step.propertyType) {
+      if (_prefs.propertyTypes.isEmpty) return 'assets/onboarding/onboarding_06_property_types.jpg';
+      return _propertyTypeAsset(_prefs.propertyTypes.last);
+    }
+    return _stepBackgrounds[step];
+  }
+
+  String _propertyTypeAsset(PropertyType type) {
+    switch (type) {
+      case PropertyType.villa:
+        return 'assets/properties/p1/07_Waterfront_villa_with_infinity_pool.jpg';
+      case PropertyType.apartment:
+        return 'assets/properties/p2/02_Apartment_buildings_in_Muscat.jpg';
+      case PropertyType.townhouse:
+        return 'assets/properties/p4/01_Contemporary_family_villa_comple.jpg';
+      case PropertyType.residentialLand:
+        return 'assets/properties/p3/01_Aerial_view_of_residential_plot.jpg';
+      case PropertyType.penthouse:
+        return 'assets/properties/p5/05_Modern_apartment_building_exterior.jpg';
+      case PropertyType.commercialBuilding:
+        return 'assets/properties/p6/04_Modern_commercial_building_exterior.jpg';
+      default:
+        return 'assets/onboarding/onboarding_06_property_types.jpg';
+    }
   }
 
   Widget _buildStep() {
@@ -127,9 +167,17 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       case _Step.language:
         return _LanguageStep(onContinue: _next);
       case _Step.locationPermission:
-        return _LocationPermissionStep(onContinue: _next, onSkip: _skipToHome);
+        return _LocationPermissionStep(onBack: _back, onContinue: _next, onSkip: _skipToHome);
       case _Step.intro:
-        return _IntroStep(onGetStarted: _next, onSkip: () => context.go('/home'));
+        return _IntroStep(onBack: _back, onGetStarted: _next, onSkip: () => context.go('/home'));
+      case _Step.userType:
+        return _UserTypeStep(
+          prefs: _prefs,
+          onBack: _back,
+          onContinue: _next,
+          onSkip: _skipToHome,
+          onChanged: () => setState(() {}),
+        );
       case _Step.transaction:
         return _TransactionStep(
           prefs: _prefs,
@@ -317,16 +365,18 @@ class _LanguageTile extends StatelessWidget {
 }
 
 class _LocationPermissionStep extends StatelessWidget {
+  final VoidCallback onBack;
   final VoidCallback onContinue;
   final VoidCallback onSkip;
 
-  const _LocationPermissionStep({required this.onContinue, required this.onSkip});
+  const _LocationPermissionStep({required this.onBack, required this.onContinue, required this.onSkip});
 
   @override
   Widget build(BuildContext context) {
     return _OnboardingScaffold(
       title: 'Find properties near you',
       subtitle: 'Allow location access to see verified properties and services close to you.',
+      onBack: onBack,
       onSkip: onSkip,
       onContinue: onContinue,
       continueLabel: 'Enable location',
@@ -341,10 +391,11 @@ class _LocationPermissionStep extends StatelessWidget {
 }
 
 class _IntroStep extends StatelessWidget {
+  final VoidCallback onBack;
   final VoidCallback onGetStarted;
   final VoidCallback onSkip;
 
-  const _IntroStep({required this.onGetStarted, required this.onSkip});
+  const _IntroStep({required this.onBack, required this.onGetStarted, required this.onSkip});
 
   @override
   Widget build(BuildContext context) {
@@ -352,6 +403,10 @@ class _IntroStep extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
+          Align(
+            alignment: Alignment.topLeft,
+            child: IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back_rounded)),
+          ),
           const Spacer(),
           Text('Make Aqarati yours', style: Theme.of(context).textTheme.headlineLarge, textAlign: TextAlign.center),
           const SizedBox(height: AppSpacing.sm),
@@ -365,6 +420,111 @@ class _IntroStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           TextButton(onPressed: onSkip, child: const Text('Skip for now')),
         ],
+      ),
+    );
+  }
+}
+
+class _UserTypeStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack;
+  final VoidCallback onContinue;
+  final VoidCallback onSkip;
+  final VoidCallback onChanged;
+
+  const _UserTypeStep({
+    required this.prefs,
+    required this.onBack,
+    required this.onContinue,
+    required this.onSkip,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'Which best describes you?',
+      subtitle: "We'll shape Aqarati around what you actually do.",
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      continueEnabled: prefs.userRole != null,
+      child: GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: AppSpacing.sm,
+        crossAxisSpacing: AppSpacing.sm,
+        childAspectRatio: 1.15,
+        children: UserRole.values.map((role) {
+          final selected = prefs.userRole == role;
+          return _UserRoleCard(
+            role: role,
+            selected: selected,
+            onTap: () {
+              prefs.userRole = role;
+              onChanged();
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _UserRoleCard extends StatelessWidget {
+  final UserRole role;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _UserRoleCard({required this.role, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: selected ? AppColors.primary : Colors.transparent, width: 2),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              role.image,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => Container(color: AppColors.sand),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withValues(alpha: 0.0), Colors.black.withValues(alpha: 0.6)],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  role.label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+            if (selected)
+              const Positioned(
+                top: AppSpacing.xs,
+                right: AppSpacing.xs,
+                child: Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -659,6 +819,8 @@ class _SummaryStep extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                if (prefs.userRole != null)
+                  _SummaryRow(label: 'I AM A', value: prefs.userRole!.label),
                 if (prefs.transactionType != null)
                   _SummaryRow(label: 'LOOKING TO', value: prefs.transactionType!.label),
                 if (prefs.propertyTypes.isNotEmpty)

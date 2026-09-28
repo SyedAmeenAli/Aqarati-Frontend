@@ -43,9 +43,11 @@ class _IdentityVerificationFlowState extends State<IdentityVerificationFlow> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Identity Verification')),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: _buildStage(),
+      body: SizedBox.expand(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: _buildStage(),
+        ),
       ),
     );
   }

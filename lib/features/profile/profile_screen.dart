@@ -11,6 +11,7 @@ import '../calculators/calculators_list_screen.dart';
 import '../enquiry/my_enquiries_screen.dart';
 import '../myhome/my_home_screen.dart';
 import '../owner/owner_dashboard_screen.dart';
+import '../verification/google_signin_flow.dart';
 import '../verification/identity_verification_flow.dart';
 import '../verification/verification_center_screen.dart';
 import '../settings/settings_screen.dart';
@@ -39,11 +40,13 @@ class ProfileScreen extends ConsumerWidget {
           Text(
             user.isGuest
                 ? 'Sign in to save properties, message professionals and manage your home.'
-                : 'Verified via THEQA — Oman national digital identity.',
+                : user.identity.isConfirmed
+                    ? 'Verified via THEQA — Oman national digital identity.'
+                    : 'Signed in with Google. Verify with THEQA to unlock listing and messaging.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.xl),
-          if (user.isGuest)
+          if (!user.identity.isConfirmed)
             AqaratiButton(
               label: 'Continue with THEQA',
               icon: Icons.fingerprint_rounded,
@@ -53,7 +56,7 @@ class ProfileScreen extends ConsumerWidget {
                   MaterialPageRoute(builder: (context) => const IdentityVerificationFlow()),
                 );
                 if (verified == true) {
-                  ref.read(currentUserProvider.notifier).state = User(
+                  ref.read(currentUserProvider.notifier).signIn(User(
                     id: 'u1',
                     name: 'Faisal Al-Said',
                     identity: IdentityVerification(
@@ -61,10 +64,30 @@ class ProfileScreen extends ConsumerWidget {
                       method: 'qr',
                       confirmedAt: DateTime.now(),
                     ),
-                  );
+                  ));
                 }
               },
             ),
+          if (user.isGuest) ...[
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final name = await Navigator.of(context, rootNavigator: true).push<String>(
+                  MaterialPageRoute(builder: (context) => const GoogleSignInFlow()),
+                );
+                if (name != null) {
+                  ref.read(currentUserProvider.notifier).signIn(User(
+                    id: 'u2',
+                    name: name,
+                    identity: const IdentityVerification(status: VerificationStatus.unverified),
+                  ));
+                }
+              },
+              icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
+              label: const Text('Continue with Google'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+            ),
+          ],
           const SizedBox(height: AppSpacing.xxl),
           _MenuTile(
             icon: Icons.favorite_border_rounded,

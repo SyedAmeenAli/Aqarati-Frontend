@@ -206,7 +206,11 @@ class _Hero extends ConsumerWidget {
                         Container(color: AppColors.sand, child: Center(child: Icon(Icons.landscape_outlined, size: 64, color: AppColors.mist))),
                   ),
           ),
-          SafeArea(
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
               child: Row(
@@ -239,6 +243,7 @@ class _Hero extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
             ),
           ),
         ],

@@ -9,7 +9,9 @@ import '../../data/models/enums.dart';
 import '../../data/repositories/providers.dart';
 
 class ProfessionalDiscoveryScreen extends ConsumerStatefulWidget {
-  const ProfessionalDiscoveryScreen({super.key});
+  final BusinessCategory? initialCategory;
+
+  const ProfessionalDiscoveryScreen({super.key, this.initialCategory});
 
   @override
   ConsumerState<ProfessionalDiscoveryScreen> createState() => _ProfessionalDiscoveryScreenState();
@@ -19,6 +21,12 @@ class _ProfessionalDiscoveryScreenState extends ConsumerState<ProfessionalDiscov
   BusinessCategory? _category;
   bool _verifiedOnly = false;
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _category = widget.initialCategory;
+  }
 
   @override
   Widget build(BuildContext context) {

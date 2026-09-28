@@ -7,6 +7,7 @@ import '../../features/messages/messages_screen.dart';
 import '../../features/onboarding/onboarding_flow.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/property/property_detail_screen.dart';
+import '../../data/models/enums.dart';
 import '../../features/saved/saved_screen.dart';
 import '../../features/search/search_results_screen.dart';
 import '../../features/search/search_screen.dart';
@@ -19,7 +20,19 @@ final appRouter = GoRouter(
     GoRoute(path: '/saved', builder: (context, state) => const SavedScreen()),
     GoRoute(
       path: '/search',
-      builder: (context, state) => SearchResultsScreen(initialQuery: state.uri.queryParameters['q']),
+      builder: (context, state) {
+        final typeParam = state.uri.queryParameters['type'];
+        PropertyType? propertyType;
+        if (typeParam != null) {
+          for (final t in PropertyType.values) {
+            if (t.name == typeParam) propertyType = t;
+          }
+        }
+        return SearchResultsScreen(
+          initialQuery: state.uri.queryParameters['q'],
+          initialPropertyType: propertyType,
+        );
+      },
     ),
     GoRoute(path: '/search/start', builder: (context, state) => const SearchScreen()),
     GoRoute(
@@ -28,7 +41,16 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/professionals',
-      builder: (context, state) => const ProfessionalDiscoveryScreen(),
+      builder: (context, state) {
+        final categoryParam = state.uri.queryParameters['category'];
+        BusinessCategory? category;
+        if (categoryParam != null) {
+          for (final c in BusinessCategory.values) {
+            if (c.name == categoryParam) category = c;
+          }
+        }
+        return ProfessionalDiscoveryScreen(initialCategory: category);
+      },
     ),
     GoRoute(
       path: '/business/:id',
