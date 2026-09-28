@@ -40,27 +40,50 @@
     #boot-diagnostics {
       display: none;
       position: fixed;
-      inset: 0;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      max-height: 40vh;
       z-index: 999999;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid #b00020;
+      border-radius: 8px;
       color: #b00020;
-      font: 13px/1.5 monospace;
-      padding: 16px;
+      font: 12px/1.5 monospace;
+      padding: 10px 12px;
       overflow: auto;
       white-space: pre-wrap;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    }
+    #boot-diagnostics summary {
+      cursor: pointer;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div id="boot-diagnostics"></div>
+  <details id="boot-diagnostics">
+    <summary>Startup diagnostics (tap to expand)</summary>
+    <div id="boot-diagnostics-body"></div>
+  </details>
   <script>
     (function () {
       var panel = document.getElementById('boot-diagnostics');
+      var body = document.getElementById('boot-diagnostics-body');
       var lines = [];
       function show(text) {
         lines.push(text);
-        panel.textContent = lines.join('\n\n');
+        body.textContent = lines.join('\n\n');
         panel.style.display = 'block';
+      }
+      function hasCanvas(root) {
+        var found = false;
+        root.querySelectorAll('*').forEach(function (el) {
+          if (found) return;
+          if (el.tagName && el.tagName.toLowerCase() === 'canvas') { found = true; return; }
+          if (el.shadowRoot && hasCanvas(el.shadowRoot)) found = true;
+        });
+        return found;
       }
       window.addEventListener('error', function (e) {
         show('window error: ' + (e.message || e.error) + (e.filename ? '\nat ' + e.filename + ':' + e.lineno : ''));
@@ -78,9 +101,7 @@
         );
       }
       setTimeout(function () {
-        var canvasEls = document.getElementsByTagName('flt-glass-pane').length +
-          document.querySelectorAll('flutter-view canvas, flt-scene-host canvas').length;
-        if (canvasEls === 0 && lines.length === 0) {
+        if (!hasCanvas(document) && lines.length === 0) {
           show(
             'Flutter never attached a canvas after 8s (silent stall).\n' +
             'User agent: ' + navigator.userAgent
