@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
-import '../../core/widgets/aqarati_startup_video.dart';
+import '../../core/widgets/aqarati_logo.dart';
 import '../../data/models/enums.dart';
 import '../../data/repositories/app_state_providers.dart';
 import '../../core/locale/locale_provider.dart';
@@ -59,6 +59,14 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   _Step _step = _Step.splash;
   bool _skippedEarly = false;
 
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted && _step == _Step.splash) _goTo(_Step.language);
+    });
+  }
+
   static const _order = [
     _Step.splash,
     _Step.language,
@@ -104,13 +112,15 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
-    // The startup video is a true full-bleed cinematic opening — no
-    // SafeArea gaps around it. Every other onboarding step keeps SafeArea.
     if (_step == _Step.splash) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        extendBodyBehindAppBar: true,
-        body: AqaratiStartupVideo(onFinished: () => _goTo(_Step.language)),
+        body: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: AqaratiFullLockup(markHeight: 120, showTagline: true),
+          ),
+        ),
       );
     }
     final asset = _backgroundFor(_step);
