@@ -11,4 +11,4 @@ export PATH="$FLUTTER_DIR/bin:$PATH"
 
 flutter config --enable-web
 flutter pub get
-flutter build web --release --no-web-resources-cdn
+flutter build web --release --wasm --no-web-resources-cdn
