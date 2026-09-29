@@ -3,6 +3,49 @@ import '../../data/models/verification_models.dart';
 
 enum BudgetBucket { under50k, from50to150k, from150to300k, custom }
 
+/// The very first choice, before auth — "How will you use Aqarati?".
+/// Routes into the existing role/onboarding logic rather than a
+/// separate auth system: buyer/seller both resolve to [UserRole.buyerTenant]
+/// (the seller path continues into the existing owner-journey question),
+/// professional still picks a specific business type via the existing
+/// [UserRole] step.
+enum EntryRole { buyer, seller, professional }
+
+extension EntryRoleLabel on EntryRole {
+  String get title {
+    switch (this) {
+      case EntryRole.buyer:
+        return 'Find a property';
+      case EntryRole.seller:
+        return 'Sell or rent my property';
+      case EntryRole.professional:
+        return 'Upload & manage properties';
+    }
+  }
+
+  String get subtitle {
+    switch (this) {
+      case EntryRole.buyer:
+        return 'Buy, rent or explore homes.';
+      case EntryRole.seller:
+        return 'List your property and find the right people.';
+      case EntryRole.professional:
+        return 'For agents and property professionals.';
+    }
+  }
+
+  String get image {
+    switch (this) {
+      case EntryRole.buyer:
+        return 'assets/properties/p1/07_Waterfront_villa_with_infinity_pool.jpg';
+      case EntryRole.seller:
+        return 'assets/properties/p4/01_Contemporary_family_villa_comple.jpg';
+      case EntryRole.professional:
+        return 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg';
+    }
+  }
+}
+
 enum OwnerJourneyChoice { selling, rentingOut, leasingOut, buying, renting, exploring }
 
 extension OwnerJourneyChoiceLabel on OwnerJourneyChoice {
@@ -84,6 +127,7 @@ extension UserRoleLabel on UserRole {
 /// Local-only draft of onboarding answers. Persisted nowhere yet — wire to
 /// a real preferences repository once the backend exists.
 class OnboardingPreferences {
+  EntryRole? entryRole;
   UserRole? userRole;
   TransactionType? transactionType;
   final Set<PropertyType> propertyTypes = {};

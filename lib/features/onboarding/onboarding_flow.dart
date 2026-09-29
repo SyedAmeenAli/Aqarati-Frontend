@@ -26,6 +26,7 @@ import 'onboarding_preferences.dart';
 /// `location` share the location asset since they're the same concept.
 const _stepBackgrounds = {
   _Step.language: 'assets/onboarding/onboarding_01_language.jpg',
+  _Step.roleSelection: 'assets/onboarding/onboarding_01_language.jpg',
   _Step.intro: 'assets/onboarding/onboarding_01_language.jpg',
   _Step.transaction: 'assets/onboarding/onboarding_02_intent.jpg',
   _Step.propertyType: 'assets/onboarding/onboarding_06_property_types.jpg',
@@ -58,6 +59,7 @@ const _stepBackgrounds = {
 enum _Step {
   splash,
   language,
+  roleSelection,
   locationPermission,
   email,
   emailOtp,
@@ -112,6 +114,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
     return [
       _Step.splash,
       _Step.language,
+      _Step.roleSelection,
       _Step.locationPermission,
       _Step.email,
       _Step.emailOtp,
@@ -119,7 +122,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       _Step.phoneOtp,
       _Step.name,
       _Step.intro,
-      _Step.userType,
+      if (_prefs.userRole == null) _Step.userType,
       _Step.transaction,
       _Step.propertyType,
       _Step.services,
@@ -245,6 +248,8 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         return const SizedBox.shrink();
       case _Step.language:
         return _LanguageStep(onContinue: _next);
+      case _Step.roleSelection:
+        return _RoleSelectionStep(prefs: _prefs, onBack: _back, onContinue: _next, onChanged: () => setState(() {}));
       case _Step.locationPermission:
         return _LocationPermissionStep(onBack: _back, onContinue: _next, onSkip: _skipToHome);
       case _Step.email:
@@ -2087,6 +2092,98 @@ class _VerificationPendingStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxxl),
           AqaratiButton(label: 'Continue', fullWidth: true, onPressed: onContinue),
         ],
+      ),
+    );
+  }
+}
+
+/// The very first real choice, before auth: "How will you use Aqarati?".
+/// Buyer and Seller both resolve to [UserRole.buyerTenant] (Seller continues
+/// into the existing owner-journey question further into the flow);
+/// Professional leaves [UserRole] unset so the existing role step still asks
+/// which kind of business.
+class _RoleSelectionStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onChanged;
+
+  const _RoleSelectionStep({required this.prefs, required this.onBack, required this.onContinue, required this.onChanged});
+
+  void _choose(EntryRole role) {
+    prefs.entryRole = role;
+    if (role != EntryRole.professional) {
+      prefs.userRole = UserRole.buyerTenant;
+    }
+    onChanged();
+    onContinue();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'How will you use Aqarati?',
+      onBack: onBack,
+      onSkip: () => _choose(EntryRole.buyer),
+      onContinue: onContinue,
+      continueEnabled: false,
+      continueLabel: 'Choose an option above',
+      child: Column(
+        children: EntryRole.values
+            .map((r) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: _EntryRoleCard(role: r, onTap: () => _choose(r)),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _EntryRoleCard extends StatelessWidget {
+  final EntryRole role;
+  final VoidCallback onTap;
+
+  const _EntryRoleCard({required this.role, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        height: 120,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadius.md)),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(role.image, fit: BoxFit.cover),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Colors.black.withValues(alpha: 0.65), Colors.black.withValues(alpha: 0.15)],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(role.title, style: theme.textTheme.titleMedium?.copyWith(color: Colors.white)),
+                    const SizedBox(height: 4),
+                    Text(role.subtitle, style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
