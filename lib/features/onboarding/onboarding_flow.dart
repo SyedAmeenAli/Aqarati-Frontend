@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
+import '../../core/widgets/aqarati_fee_card.dart';
 import '../../core/widgets/aqarati_otp_field.dart';
 import '../../core/widgets/aqarati_startup_video.dart';
 import '../../data/models/enums.dart';
+import '../../data/models/verification_models.dart';
 import '../../data/repositories/app_state_providers.dart';
 import '../../core/locale/locale_provider.dart';
 import 'onboarding_background.dart';
@@ -35,6 +37,19 @@ const _stepBackgrounds = {
   _Step.phone: 'assets/onboarding/onboarding_09_preferences.jpg',
   _Step.phoneOtp: 'assets/onboarding/onboarding_09_preferences.jpg',
   _Step.name: 'assets/onboarding/onboarding_09_preferences.jpg',
+  _Step.serviceMode: 'assets/onboarding/onboarding_02_intent.jpg',
+  _Step.serviceModeExplanation: 'assets/onboarding/onboarding_02_intent.jpg',
+  _Step.ownerJourney: 'assets/properties/p1/07_Waterfront_villa_with_infinity_pool.jpg',
+  _Step.keyDepositIntro: 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg',
+  _Step.keyDepositConsent: 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg',
+  _Step.keySetDetails: 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg',
+  _Step.keyHandoverMethod: 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg',
+  _Step.keyHandoverConfirmation: 'assets/businesses/b1/13_30_Modern_office_lobby_interior.jpg',
+  _Step.citizenshipStatus: 'assets/onboarding/onboarding_08_location.jpg',
+  _Step.passportIntro: 'assets/onboarding/onboarding_08_location.jpg',
+  _Step.passportCapture: 'assets/onboarding/onboarding_08_location.jpg',
+  _Step.passportReview: 'assets/onboarding/onboarding_08_location.jpg',
+  _Step.verificationPending: 'assets/onboarding/onboarding_08_location.jpg',
   _Step.budget: 'assets/onboarding/onboarding_09_preferences.jpg',
   _Step.summary: 'assets/onboarding/onboarding_10_summary.jpg',
   _Step.success: 'assets/onboarding/onboarding_11_complete.jpg',
@@ -54,6 +69,19 @@ enum _Step {
   transaction,
   propertyType,
   services,
+  serviceMode,
+  serviceModeExplanation,
+  ownerJourney,
+  keyDepositIntro,
+  keyDepositConsent,
+  keySetDetails,
+  keyHandoverMethod,
+  keyHandoverConfirmation,
+  citizenshipStatus,
+  passportIntro,
+  passportCapture,
+  passportReview,
+  verificationPending,
   location,
   budget,
   summary,
@@ -73,25 +101,55 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   bool _skippedEarly = false;
 
 
-  static const _order = [
-    _Step.splash,
-    _Step.language,
-    _Step.locationPermission,
-    _Step.email,
-    _Step.emailOtp,
-    _Step.phone,
-    _Step.phoneOtp,
-    _Step.name,
-    _Step.intro,
-    _Step.userType,
-    _Step.transaction,
-    _Step.propertyType,
-    _Step.services,
-    _Step.location,
-    _Step.budget,
-    _Step.summary,
-    _Step.success,
-  ];
+  /// Computed fresh on every navigation — later branch points (service mode,
+  /// owner journey, key deposit) depend on answers given at earlier ones, so
+  /// this can't be a fixed list. Steps a user's answers don't apply to are
+  /// simply left out of the list rather than shown and skipped.
+  List<_Step> get _order {
+    final consumer = _prefs.isConsumerFlow;
+    final owner = _prefs.ownerJourney?.isOwnerSide ?? false;
+    final wantsKeyDeposit = owner && _prefs.serviceMode == ServiceMode.broker;
+    return [
+      _Step.splash,
+      _Step.language,
+      _Step.locationPermission,
+      _Step.email,
+      _Step.emailOtp,
+      _Step.phone,
+      _Step.phoneOtp,
+      _Step.name,
+      _Step.intro,
+      _Step.userType,
+      _Step.transaction,
+      _Step.propertyType,
+      _Step.services,
+      if (consumer) ...[
+        _Step.serviceMode,
+        _Step.serviceModeExplanation,
+        _Step.ownerJourney,
+        if (wantsKeyDeposit) ...[
+          _Step.keyDepositIntro,
+          if (_prefs.keyDepositOptedIn) ...[
+            _Step.keyDepositConsent,
+            _Step.keySetDetails,
+            _Step.keyHandoverMethod,
+            _Step.keyHandoverConfirmation,
+          ],
+        ],
+        _Step.citizenshipStatus,
+        _Step.passportIntro,
+        if (_prefs.passportState != PassportVerificationState.notStarted) ...[
+          _Step.passportCapture,
+          _Step.passportReview,
+          _Step.verificationPending,
+        ],
+      ],
+      _Step.location,
+      _Step.budget,
+      _Step.summary,
+      _Step.success,
+    ];
+  }
 
   void _goTo(_Step step) => setState(() => _step = step);
 
@@ -233,6 +291,32 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
           onSkip: _skipToHome,
           onChanged: () => setState(() {}),
         );
+      case _Step.serviceMode:
+        return _ServiceModeStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome, onChanged: () => setState(() {}));
+      case _Step.serviceModeExplanation:
+        return _ServiceModeExplanationStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.ownerJourney:
+        return _OwnerJourneyStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome, onChanged: () => setState(() {}));
+      case _Step.keyDepositIntro:
+        return _KeyDepositIntroStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.keyDepositConsent:
+        return _KeyDepositConsentStep(onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.keySetDetails:
+        return _KeySetDetailsStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.keyHandoverMethod:
+        return _KeyHandoverMethodStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome, onChanged: () => setState(() {}));
+      case _Step.keyHandoverConfirmation:
+        return _KeyHandoverConfirmationStep(prefs: _prefs, onBack: _back, onContinue: _next);
+      case _Step.citizenshipStatus:
+        return _CitizenshipStatusStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome, onChanged: () => setState(() {}));
+      case _Step.passportIntro:
+        return _PassportIntroStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome, onChanged: () => setState(() {}));
+      case _Step.passportCapture:
+        return _PassportCaptureStep(prefs: _prefs, onBack: _back, onContinue: _next, onChanged: () => setState(() {}));
+      case _Step.passportReview:
+        return _PassportReviewStep(prefs: _prefs, onBack: _back, onContinue: _next, onChanged: () => setState(() {}));
+      case _Step.verificationPending:
+        return _VerificationPendingStep(prefs: _prefs, onContinue: _next);
       case _Step.location:
         return _LocationStep(
           prefs: _prefs,
@@ -1308,6 +1392,687 @@ class _NameStepState extends State<_NameStep> {
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(hintText: 'Ameen Syed'),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Generic single-choice list row shared by Owner Journey, Citizenship
+/// Status, and Key Handover Method — one large tappable card per option.
+class _ChoiceListTile extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ChoiceListTile({required this.title, this.subtitle, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: selected ? AppColors.primary : AppColors.line, width: selected ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: theme.textTheme.titleSmall),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+                  ],
+                ],
+              ),
+            ),
+            if (selected) const Icon(Icons.check_circle_rounded, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceModeStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip, onChanged;
+
+  const _ServiceModeStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'How do you want Aqarati to help?',
+      subtitle: 'Choose how involved you want us to be.',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      continueEnabled: prefs.serviceMode != null,
+      child: Column(
+        children: [
+          _ServiceModeCard(
+            title: 'Let Aqarati handle it',
+            subtitle:
+                'Tell us what you want to buy, sell, rent or find. We\'ll take care of the journey for you — matching opportunities, handling enquiries, coordinating viewings and helping move the process forward.',
+            chips: const ['Property search', 'Buyer / seller matching', 'Enquiries', 'Viewings', 'Process coordination'],
+            selected: prefs.serviceMode == ServiceMode.broker,
+            onTap: () {
+              prefs.serviceMode = ServiceMode.broker;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _ServiceModeCard(
+            title: 'You stay in control',
+            subtitle:
+                'Search, contact, arrange viewings and manage your property journey yourself. Aqarati provides the platform and tools, while you handle the process.',
+            chips: [formatServiceFeeRate(), 'Aqarati service / convenience fee applies to a completed transaction'],
+            selected: prefs.serviceMode == ServiceMode.selfManaged,
+            onTap: () {
+              prefs.serviceMode = ServiceMode.selfManaged;
+              onChanged();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceModeCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final List<String> chips;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ServiceModeCard({required this.title, required this.subtitle, required this.chips, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: selected ? AppColors.primary : AppColors.line, width: selected ? 2 : 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
+                if (selected) const Icon(Icons.check_circle_rounded, color: AppColors.primary),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(subtitle, style: theme.textTheme.bodySmall),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: chips
+                  .map((c) => Chip(label: Text(c, style: theme.textTheme.labelSmall), backgroundColor: AppColors.sand))
+                  .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceModeExplanationStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _ServiceModeExplanationStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final broker = prefs.serviceMode == ServiceMode.broker;
+    return _OnboardingScaffold(
+      title: broker ? 'Let Aqarati do the heavy lifting.' : 'Your property journey. Your way.',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      continueLabel: broker ? 'Continue with Aqarati Broker' : 'Continue',
+      child: broker
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                _NumberedStep(number: 1, text: 'Tell us what you need'),
+                _NumberedStep(number: 2, text: 'We find the right opportunities'),
+                _NumberedStep(number: 3, text: 'We handle enquiries'),
+                _NumberedStep(number: 4, text: 'We coordinate viewings'),
+                _NumberedStep(number: 5, text: 'We help move the transaction forward'),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("You'll search and manage the process yourself using Aqarati.", style: theme.textTheme.bodyMedium),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: ['Search', 'Contact', 'Viewings', 'Enquiries', 'Offers / process', 'Completion']
+                      .map((c) => Chip(label: Text(c), backgroundColor: AppColors.sand))
+                      .toList(),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const AqaratiFeeCard(),
+              ],
+            ),
+    );
+  }
+}
+
+class _NumberedStep extends StatelessWidget {
+  final int number;
+  final String text;
+
+  const _NumberedStep({required this.number, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(radius: 14, backgroundColor: AppColors.primary, child: Text('$number', style: const TextStyle(color: Colors.white))),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+}
+
+class _OwnerJourneyStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip, onChanged;
+
+  const _OwnerJourneyStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'Tell us about your property journey',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      continueEnabled: prefs.ownerJourney != null,
+      child: Column(
+        children: OwnerJourneyChoice.values
+            .map((c) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ChoiceListTile(
+                    title: c.label,
+                    selected: prefs.ownerJourney == c,
+                    onTap: () {
+                      prefs.ownerJourney = c;
+                      onChanged();
+                    },
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _KeyDepositIntroStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _KeyDepositIntroStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _OnboardingScaffold(
+      title: 'Let Aqarati manage the viewings',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: () {
+        prefs.keyDepositOptedIn = true;
+        onContinue();
+      },
+      continueLabel: 'Set up key deposit',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'You can optionally leave a spare set of keys with Aqarati so approved viewings can be coordinated without you being present every time.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          for (final b in ['Fewer interruptions', 'Coordinated viewings', 'Recorded key handover', 'Return tracking'])
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_rounded, color: AppColors.verified, size: 18),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(b, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          const SizedBox(height: AppSpacing.md),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                prefs.keyDepositOptedIn = false;
+                onContinue();
+              },
+              child: const Text("I'll keep the keys"),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeyDepositConsentStep extends StatelessWidget {
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _KeyDepositConsentStep({required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _OnboardingScaffold(
+      title: 'Your keys stay accounted for.',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final step in ['Key handover', 'Secure custody', 'Approved access', 'Viewing', 'Return'])
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text('•  $step', style: theme.textTheme.bodyMedium),
+            ),
+          const SizedBox(height: AppSpacing.md),
+          Text('Key deposit is optional.', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Only Aqarati-authorized personnel should access deposited keys.',
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeySetDetailsStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _KeySetDetailsStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  State<_KeySetDetailsStep> createState() => _KeySetDetailsStepState();
+}
+
+class _KeySetDetailsStepState extends State<_KeySetDetailsStep> {
+  late final _propertyController = TextEditingController(text: widget.prefs.keySetPropertyName ?? '');
+  late final _nameController = TextEditingController(text: widget.prefs.keySetName ?? '');
+  late final _countController = TextEditingController(text: widget.prefs.keySetCount?.toString() ?? '');
+  late final _notesController = TextEditingController(text: widget.prefs.keySetNotes ?? '');
+
+  @override
+  void dispose() {
+    _propertyController.dispose();
+    _nameController.dispose();
+    _countController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'Key set details',
+      onBack: widget.onBack,
+      onSkip: widget.onSkip,
+      onContinue: () {
+        widget.prefs.keySetPropertyName = _propertyController.text.trim();
+        widget.prefs.keySetName = _nameController.text.trim();
+        widget.prefs.keySetCount = int.tryParse(_countController.text.trim());
+        widget.prefs.keySetNotes = _notesController.text.trim();
+        widget.onContinue();
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Property name / address', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(controller: _propertyController, decoration: const InputDecoration(hintText: 'Villa 12, Al Mouj')),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Key set name', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(controller: _nameController, decoration: const InputDecoration(hintText: 'Villa main key set')),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Number of keys', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _countController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(hintText: '2'),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Notes', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(controller: _notesController, decoration: const InputDecoration(hintText: 'Main entrance + gate')),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeyHandoverMethodStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip, onChanged;
+
+  const _KeyHandoverMethodStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'How would you like to hand over your keys?',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      continueEnabled: prefs.keyHandoverMethod != null,
+      child: Column(
+        children: KeyHandoverMethod.values
+            .map((m) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ChoiceListTile(
+                    title: m.label,
+                    subtitle: m == KeyHandoverMethod.dropOff || m == KeyHandoverMethod.collection ? 'Demo option — no real Aqarati location wired yet' : null,
+                    selected: prefs.keyHandoverMethod == m,
+                    onTap: () {
+                      prefs.keyHandoverMethod = m;
+                      onChanged();
+                    },
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _KeyHandoverConfirmationStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue;
+
+  const _KeyHandoverConfirmationStep({required this.prefs, required this.onBack, required this.onContinue});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _OnboardingScaffold(
+      title: 'Key deposit request created',
+      onBack: onBack,
+      onSkip: onContinue,
+      onContinue: onContinue,
+      continueLabel: 'Done',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SummaryRow(label: 'PROPERTY', value: prefs.keySetPropertyName ?? '—'),
+          _SummaryRow(label: 'KEY SET', value: prefs.keySetName ?? '—'),
+          _SummaryRow(label: 'HANDOVER METHOD', value: prefs.keyHandoverMethod?.label ?? '—'),
+          _SummaryRow(label: 'STATUS', value: KeyCustodyState.awaitingHandover.label),
+          const SizedBox(height: AppSpacing.md),
+          Text('You can view and manage key status anytime from My Home.', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+        ],
+      ),
+    );
+  }
+}
+
+class _CitizenshipStatusStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip, onChanged;
+
+  const _CitizenshipStatusStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'Tell us about your status',
+      subtitle: 'This helps us show the right verification requirements.',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: onContinue,
+      continueEnabled: prefs.citizenshipStatus != null,
+      child: Column(
+        children: CitizenshipStatus.values
+            .map((s) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ChoiceListTile(
+                    title: s.label,
+                    selected: prefs.citizenshipStatus == s,
+                    onTap: () {
+                      prefs.citizenshipStatus = s;
+                      onChanged();
+                    },
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _PassportIntroStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip, onChanged;
+
+  const _PassportIntroStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _OnboardingScaffold(
+      title: 'Verify your identity',
+      subtitle: 'Use your passport so we can confirm your identity.',
+      onBack: onBack,
+      onSkip: onSkip,
+      onContinue: () {
+        prefs.passportState = PassportVerificationState.uploading;
+        onChanged();
+        onContinue();
+      },
+      continueLabel: 'Verify passport',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.badge_outlined, size: 56, color: AppColors.primary),
+          const SizedBox(height: AppSpacing.md),
+          Text('Your document is used only for verification.', style: theme.textTheme.bodyMedium),
+          const SizedBox(height: AppSpacing.lg),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                prefs.passportState = PassportVerificationState.notStarted;
+                onChanged();
+                onContinue();
+              },
+              child: const Text('Do this later'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PassportCaptureStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onChanged;
+
+  const _PassportCaptureStep({required this.prefs, required this.onBack, required this.onContinue, required this.onChanged});
+
+  @override
+  State<_PassportCaptureStep> createState() => _PassportCaptureStepState();
+}
+
+class _PassportCaptureStepState extends State<_PassportCaptureStep> {
+  bool _captured = false;
+
+  void _pick() => setState(() => _captured = true);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _OnboardingScaffold(
+      title: 'Place your passport inside the frame',
+      onBack: widget.onBack,
+      onSkip: widget.onContinue,
+      onContinue: widget.onContinue,
+      continueEnabled: _captured,
+      continueLabel: 'Continue',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            height: 180,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.line, width: 2),
+              color: AppColors.surface,
+            ),
+            alignment: Alignment.center,
+            child: _captured
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.check_circle_rounded, color: AppColors.verified, size: 40),
+                      SizedBox(height: AppSpacing.sm),
+                      Text('Document selected'),
+                    ],
+                  )
+                : Icon(Icons.crop_free_rounded, size: 56, color: AppColors.mist),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text('Make sure all four corners are visible.', style: theme.textTheme.bodySmall),
+          Text('Avoid glare and shadows.', style: theme.textTheme.bodySmall),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(child: OutlinedButton(onPressed: _pick, child: const Text('Take photo'))),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: OutlinedButton(onPressed: _pick, child: const Text('Upload from phone'))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PassportReviewStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onChanged;
+
+  const _PassportReviewStep({required this.prefs, required this.onBack, required this.onContinue, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _OnboardingScaffold(
+      title: 'Check your passport',
+      onBack: onBack,
+      onSkip: onContinue,
+      onContinue: () {
+        prefs.passportState = PassportVerificationState.submitted;
+        onChanged();
+        onContinue();
+      },
+      continueLabel: 'Submit for verification',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            height: 140,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadius.md), color: AppColors.surface),
+            alignment: Alignment.center,
+            child: Icon(Icons.badge_outlined, size: 48, color: AppColors.mist),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          for (final item in ['Photo page visible', 'Text readable', 'Corners visible'])
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_rounded, color: AppColors.verified, size: 18),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(item, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerificationPendingStep extends StatelessWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onContinue;
+
+  const _VerificationPendingStep({required this.prefs, required this.onContinue});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.hourglass_top_rounded, size: 72, color: AppColors.primary),
+          const SizedBox(height: AppSpacing.xl),
+          Text('Your verification is in progress.', style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            "We'll update you when your identity has been reviewed.",
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xxxl),
+          AqaratiButton(label: 'Continue', fullWidth: true, onPressed: onContinue),
         ],
       ),
     );

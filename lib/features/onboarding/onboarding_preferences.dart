@@ -1,6 +1,45 @@
 import '../../data/models/enums.dart';
+import '../../data/models/verification_models.dart';
 
 enum BudgetBucket { under50k, from50to150k, from150to300k, custom }
+
+enum OwnerJourneyChoice { selling, rentingOut, leasingOut, buying, renting, exploring }
+
+extension OwnerJourneyChoiceLabel on OwnerJourneyChoice {
+  String get label {
+    switch (this) {
+      case OwnerJourneyChoice.selling:
+        return "I'm selling a property";
+      case OwnerJourneyChoice.rentingOut:
+        return "I'm renting out a property";
+      case OwnerJourneyChoice.leasingOut:
+        return "I'm leasing out a property";
+      case OwnerJourneyChoice.buying:
+        return "I'm looking to buy";
+      case OwnerJourneyChoice.renting:
+        return "I'm looking to rent";
+      case OwnerJourneyChoice.exploring:
+        return "I'm exploring";
+    }
+  }
+
+  bool get isOwnerSide => this == OwnerJourneyChoice.selling || this == OwnerJourneyChoice.rentingOut || this == OwnerJourneyChoice.leasingOut;
+}
+
+enum KeyHandoverMethod { dropOff, collection, arrangeLater }
+
+extension KeyHandoverMethodLabel on KeyHandoverMethod {
+  String get label {
+    switch (this) {
+      case KeyHandoverMethod.dropOff:
+        return 'Drop them at an Aqarati location';
+      case KeyHandoverMethod.collection:
+        return 'Aqarati collection';
+      case KeyHandoverMethod.arrangeLater:
+        return 'Arrange later';
+    }
+  }
+}
 
 /// Who the user is, asked once during onboarding (or later, if skipped, when
 /// they attempt identity verification) — drives which experience they land in downstream.
@@ -58,6 +97,26 @@ class OnboardingPreferences {
   String? phone;
   bool phoneVerified = false;
   String? fullName;
+
+  ServiceMode? serviceMode;
+  OwnerJourneyChoice? ownerJourney;
+
+  bool keyDepositOptedIn = false;
+  String? keySetPropertyName;
+  String? keySetName;
+  int? keySetCount;
+  String? keySetNotes;
+  KeyHandoverMethod? keyHandoverMethod;
+
+  CitizenshipStatus? citizenshipStatus;
+  PassportVerificationState passportState = PassportVerificationState.notStarted;
+
+  /// The consumer-facing extended flow (service mode, owner journey, key
+  /// deposit, citizenship/passport) only applies to buyers/tenants — a
+  /// professional (agent, construction, developer, architecture, interior
+  /// design) role goes straight from Services to Location/Budget/Summary,
+  /// matching how those roles already worked before this rework.
+  bool get isConsumerFlow => userRole == null || userRole == UserRole.buyerTenant;
 
   bool get hasAnyAnswer =>
       userRole != null ||
