@@ -6,7 +6,9 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/identity_verification.dart';
+import '../../data/models/verification_models.dart';
 import '../../data/repositories/app_state_providers.dart';
+import '../onboarding/onboarding_preferences.dart';
 import '../calculators/calculators_list_screen.dart';
 import '../enquiry/my_enquiries_screen.dart';
 import '../myhome/my_home_screen.dart';
@@ -23,6 +25,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final onboarding = ref.watch(onboardingPreferencesProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
@@ -88,6 +91,10 @@ class ProfileScreen extends ConsumerWidget {
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
             ),
           ],
+          if (onboarding != null) ...[
+            const SizedBox(height: AppSpacing.xl),
+            _VerificationSummaryCard(prefs: onboarding),
+          ],
           const SizedBox(height: AppSpacing.xxl),
           _MenuTile(
             icon: Icons.favorite_border_rounded,
@@ -150,6 +157,72 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Shows the account facts collected during onboarding — never conflates
+/// email/phone verification with passport identity verification.
+class _VerificationSummaryCard extends StatelessWidget {
+  final OnboardingPreferences prefs;
+
+  const _VerificationSummaryCard({required this.prefs});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final rows = <(String, String)>[
+      if (prefs.email != null) ('Email', prefs.emailVerified ? 'Verified' : 'Unverified'),
+      if (prefs.phone != null) ('Phone', prefs.phoneVerified ? 'Verified' : 'Unverified'),
+      if (prefs.citizenshipStatus != null) ('Status', prefs.citizenshipStatus!.label),
+      ('Identity document', _passportLabel(prefs.passportState)),
+      if (prefs.serviceMode != null) ('Service preference', prefs.serviceMode!.label),
+    ];
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Account', style: theme.textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          for (final r in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(r.$1, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+                  Text(r.$2, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _passportLabel(PassportVerificationState state) {
+    switch (state) {
+      case PassportVerificationState.notStarted:
+        return 'Not started';
+      case PassportVerificationState.uploading:
+        return 'Uploading';
+      case PassportVerificationState.submitted:
+        return 'Submitted';
+      case PassportVerificationState.pending:
+        return 'Pending review';
+      case PassportVerificationState.verified:
+        return 'Verified';
+      case PassportVerificationState.failed:
+        return 'Failed';
+      case PassportVerificationState.resubmissionRequired:
+        return 'Resubmission required';
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import '../../core/widgets/aqarati_button.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/home.dart';
 import 'documents_screen.dart';
+import 'key_custody_screen.dart';
 
 final myHomesProvider = StateProvider<List<Home>>((ref) => []);
 
@@ -15,6 +16,7 @@ class MyHomeScreen extends ConsumerWidget {
   static const _sections = [
     (Icons.home_work_outlined, 'Property', 'Details, specs and ownership documents'),
     (Icons.description_outlined, 'Documents', 'Title deed, contracts and warranties'),
+    (Icons.key_outlined, 'Key custody', 'Track a key deposit handed to Aqarati'),
     (Icons.build_outlined, 'Maintenance', 'Requests, history and providers'),
     (Icons.receipt_long_outlined, 'Expenses', 'Track spending on your home'),
     (Icons.brush_outlined, 'Renovations', 'Plan and track improvement projects'),
@@ -128,13 +130,15 @@ class MyHomeScreen extends ConsumerWidget {
         ..._sections.map((s) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: InkWell(
-                onTap: () => s.$2 == 'Documents'
-                    ? Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const DocumentsScreen()),
-                      )
-                    : ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${s.$2} — coming soon')),
-                      ),
+                onTap: () {
+                  if (s.$2 == 'Documents') {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const DocumentsScreen()));
+                  } else if (s.$2 == 'Key custody') {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const KeyCustodyScreen()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${s.$2} — coming soon')));
+                  }
+                },
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 child: Container(
                   padding: const EdgeInsets.all(AppSpacing.md),

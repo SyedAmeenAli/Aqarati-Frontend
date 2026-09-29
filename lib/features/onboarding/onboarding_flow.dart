@@ -316,6 +316,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       case _Step.passportReview:
         return _PassportReviewStep(prefs: _prefs, onBack: _back, onContinue: _next, onChanged: () => setState(() {}));
       case _Step.verificationPending:
+        _prefs.passportState = PassportVerificationState.pending;
         return _VerificationPendingStep(prefs: _prefs, onContinue: _next);
       case _Step.location:
         return _LocationStep(
@@ -519,7 +520,7 @@ class _IntroStep extends StatelessWidget {
       child: Column(
         children: [
           Align(
-            alignment: Alignment.topLeft,
+            alignment: AlignmentDirectional.topStart,
             child: IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back_rounded)),
           ),
           const Spacer(),

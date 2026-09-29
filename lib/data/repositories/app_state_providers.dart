@@ -5,6 +5,7 @@ import '../models/enums.dart';
 import '../models/money.dart';
 import '../models/saved.dart';
 import '../models/identity_verification.dart';
+import '../models/verification_models.dart';
 import '../../features/onboarding/onboarding_preferences.dart';
 
 /// The signed-in user — guest until identity verification succeeds.
@@ -49,6 +50,14 @@ class CurrentUserNotifier extends StateNotifier<User> {
 /// OnboardingFlow, read by Home/Explore to make the intake actually change
 /// what those screens show. Null until onboarding is completed at least once.
 final onboardingPreferencesProvider = StateProvider<OnboardingPreferences?>((ref) => null);
+
+/// Key custody status for the property deposited during onboarding (if any).
+/// Derived from [onboardingPreferencesProvider] at first read, then owned
+/// here so the Return flow can advance it independently.
+final keyCustodyStateProvider = StateProvider<KeyCustodyState>((ref) {
+  final prefs = ref.watch(onboardingPreferencesProvider);
+  return prefs?.keyDepositOptedIn == true ? KeyCustodyState.awaitingHandover : KeyCustodyState.notRequested;
+});
 
 /// Session-scoped app state — in-memory only (no backend yet). Actions taken
 /// in one screen (save, book, offer) show up in another (Saved, My Home,
