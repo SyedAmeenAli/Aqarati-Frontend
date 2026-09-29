@@ -9,6 +9,7 @@ import '../../core/widgets/aqarati_asset_image.dart';
 import '../../core/widgets/app_drawer.dart';
 import '../../core/widgets/aqarati_category_card.dart';
 import '../../core/widgets/aqarati_map_view.dart';
+import '../../core/widgets/aqarati_review_prompt.dart';
 import '../../core/widgets/aqarati_logo.dart';
 import '../../core/widgets/aqarati_search_field.dart';
 import '../../core/widgets/property_card.dart';
@@ -49,6 +50,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     final prefs = ref.read(onboardingPreferencesProvider);
     if (prefs?.transactionType != null) _selected = prefs!.transactionType!;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) maybeShowReviewPrompt(context, ref);
+    });
   }
 
   List<Property> _filterByTransaction(List<Property> all) =>

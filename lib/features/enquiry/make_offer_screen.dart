@@ -6,6 +6,7 @@ import '../../core/widgets/aqarati_button.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/money.dart';
 import '../../data/models/property.dart';
+import '../../data/models/verification_models.dart';
 import '../../data/repositories/app_state_providers.dart';
 
 class MakeOfferScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,8 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
   }
 
   bool get _canSubmit => _priceController.text.trim().isNotEmpty && _agreedTerms;
+
+  double get _offerAmount => double.tryParse(_priceController.text.replaceAll(',', '')) ?? 0;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +59,10 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
             decoration: const InputDecoration(prefixText: 'OMR ', hintText: 'e.g. 175,000'),
             onChanged: (_) => setState(() {}),
           ),
+          if (_offerAmount > 0 && ref.watch(onboardingPreferencesProvider)?.serviceMode == ServiceMode.selfManaged) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _FeePreview(offerAmount: _offerAmount),
+          ],
           const SizedBox(height: AppSpacing.xl),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
@@ -109,6 +116,56 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen> {
           ),
           const SizedBox(height: AppSpacing.xxxl),
           AqaratiButton(label: 'Back to listing', fullWidth: true, onPressed: () => Navigator.of(context).pop()),
+        ],
+      ),
+    );
+  }
+}
+
+/// Live fee preview shown while entering an offer — only for DIY
+/// (self-managed) users, since the 2% service/convenience fee applies to
+/// the applicable completed transaction when Aqarati is not brokering it.
+class _FeePreview extends StatelessWidget {
+  final double offerAmount;
+
+  const _FeePreview({required this.offerAmount});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fee = offerAmount * kAqaratiServiceFeeRate;
+    final total = offerAmount + fee;
+    String omr(double v) => 'OMR ${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',')}';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('If this offer completes', style: theme.textTheme.labelMedium?.copyWith(color: AppColors.slate)),
+          const SizedBox(height: AppSpacing.xs),
+          _row(theme, 'Offer amount', omr(offerAmount)),
+          _row(theme, 'Aqarati service / convenience fee (${formatServiceFeeRate()})', omr(fee)),
+          const Divider(height: AppSpacing.md),
+          _row(theme, 'Total', omr(total), emphasize: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(ThemeData theme, String label, String value, {bool emphasize = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(child: Text(label, style: emphasize ? theme.textTheme.titleSmall : theme.textTheme.bodySmall)),
+          Text(value, style: emphasize ? theme.textTheme.titleSmall : theme.textTheme.bodyMedium),
         ],
       ),
     );

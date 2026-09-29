@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
+import '../../core/widgets/aqarati_fee_card.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/identity_verification.dart';
 import '../../data/models/verification_models.dart';
@@ -94,6 +95,14 @@ class ProfileScreen extends ConsumerWidget {
           if (onboarding != null) ...[
             const SizedBox(height: AppSpacing.xl),
             _VerificationSummaryCard(prefs: onboarding),
+          ],
+          if (onboarding?.serviceMode != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _ServiceModeCard(mode: onboarding!.serviceMode!),
+          ],
+          if (onboarding?.serviceMode == ServiceMode.selfManaged) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _FeeDisclosureCard(),
           ],
           const SizedBox(height: AppSpacing.xxl),
           _MenuTile(
@@ -223,6 +232,101 @@ class _VerificationSummaryCard extends StatelessWidget {
       case PassportVerificationState.resubmissionRequired:
         return 'Resubmission required';
     }
+  }
+}
+
+class _ServiceModeCard extends StatelessWidget {
+  final ServiceMode mode;
+
+  const _ServiceModeCard({required this.mode});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final broker = mode == ServiceMode.broker;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Your Aqarati mode', style: theme.textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          Text(mode.label, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 2),
+          Text(
+            broker ? 'Aqarati helps manage your property journey.' : 'You manage your property journey yourself.',
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeeDisclosureCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Aqarati service fee', style: theme.textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          Text(formatServiceFeeRate(), style: theme.textTheme.headlineSmall?.copyWith(color: AppColors.primary)),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'An Aqarati service / convenience fee of ${formatServiceFeeRate()} applies to applicable completed transactions.',
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
+            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, alignment: Alignment.centerLeft),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => Padding(
+                padding: EdgeInsets.only(
+                  left: AppSpacing.lg,
+                  right: AppSpacing.lg,
+                  top: AppSpacing.lg,
+                  bottom: AppSpacing.lg + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('How the ${formatServiceFeeRate()} fee works', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Aqarati charges a ${formatServiceFeeRate()} service / convenience fee on applicable completed transactions when this fee applies.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const AqaratiFeeCard(),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            child: const Text('How it works'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
