@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
+import '../../core/widgets/aqarati_otp_field.dart';
 import '../../core/widgets/aqarati_startup_video.dart';
 import '../../data/models/enums.dart';
 import '../../data/repositories/app_state_providers.dart';
@@ -27,6 +30,11 @@ const _stepBackgrounds = {
   _Step.services: 'assets/onboarding/onboarding_07_services.jpg',
   _Step.locationPermission: 'assets/onboarding/onboarding_08_location.jpg',
   _Step.location: 'assets/onboarding/onboarding_08_location.jpg',
+  _Step.email: 'assets/onboarding/onboarding_09_preferences.jpg',
+  _Step.emailOtp: 'assets/onboarding/onboarding_09_preferences.jpg',
+  _Step.phone: 'assets/onboarding/onboarding_09_preferences.jpg',
+  _Step.phoneOtp: 'assets/onboarding/onboarding_09_preferences.jpg',
+  _Step.name: 'assets/onboarding/onboarding_09_preferences.jpg',
   _Step.budget: 'assets/onboarding/onboarding_09_preferences.jpg',
   _Step.summary: 'assets/onboarding/onboarding_10_summary.jpg',
   _Step.success: 'assets/onboarding/onboarding_11_complete.jpg',
@@ -36,6 +44,11 @@ enum _Step {
   splash,
   language,
   locationPermission,
+  email,
+  emailOtp,
+  phone,
+  phoneOtp,
+  name,
   intro,
   userType,
   transaction,
@@ -64,6 +77,11 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
     _Step.splash,
     _Step.language,
     _Step.locationPermission,
+    _Step.email,
+    _Step.emailOtp,
+    _Step.phone,
+    _Step.phoneOtp,
+    _Step.name,
     _Step.intro,
     _Step.userType,
     _Step.transaction,
@@ -171,6 +189,16 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         return _LanguageStep(onContinue: _next);
       case _Step.locationPermission:
         return _LocationPermissionStep(onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.email:
+        return _EmailStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.emailOtp:
+        return _EmailOtpStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.phone:
+        return _PhoneStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.phoneOtp:
+        return _PhoneOtpStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
+      case _Step.name:
+        return _NameStep(prefs: _prefs, onBack: _back, onContinue: _next, onSkip: _skipToHome);
       case _Step.intro:
         return _IntroStep(onBack: _back, onGetStarted: _next, onSkip: () => context.go('/home'));
       case _Step.userType:
@@ -822,6 +850,10 @@ class _SummaryStep extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                if (prefs.fullName != null && prefs.fullName!.isNotEmpty)
+                  _SummaryRow(label: 'NAME', value: prefs.fullName!),
+                if (prefs.email != null) _SummaryRow(label: 'EMAIL', value: prefs.email!),
+                if (prefs.phone != null) _SummaryRow(label: 'PHONE', value: prefs.phone!),
                 if (prefs.userRole != null)
                   _SummaryRow(label: 'I AM A', value: prefs.userRole!.label),
                 if (prefs.transactionType != null)
@@ -913,6 +945,369 @@ class _SuccessStep extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxxl),
           AqaratiButton(label: 'Explore Aqarati', fullWidth: true, onPressed: onDone),
+        ],
+      ),
+    );
+  }
+}
+
+final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+class _EmailStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _EmailStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  State<_EmailStep> createState() => _EmailStepState();
+}
+
+class _EmailStepState extends State<_EmailStep> {
+  late final _controller = TextEditingController(text: widget.prefs.email ?? '');
+  bool _loading = false;
+  String? _error;
+
+  bool get _isValid => _emailRegex.hasMatch(_controller.text.trim());
+
+  Future<void> _submit() async {
+    if (!_isValid) {
+      setState(() => _error = 'Enter a valid email address.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    widget.prefs.email = _controller.text.trim();
+    widget.onContinue();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: "Let's get your details",
+      subtitle: 'A few details help us keep your account secure and make Aqarati more useful.',
+      onBack: widget.onBack,
+      onSkip: widget.onSkip,
+      onContinue: _submit,
+      continueEnabled: !_loading,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Email address', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            onChanged: (_) => setState(() => _error = null),
+            decoration: InputDecoration(hintText: 'you@example.com', errorText: _error),
+          ),
+          if (_loading) ...[
+            const SizedBox(height: AppSpacing.lg),
+            const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _EmailOtpStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _EmailOtpStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  State<_EmailOtpStep> createState() => _EmailOtpStepState();
+}
+
+class _EmailOtpStepState extends State<_EmailOtpStep> {
+  bool _verifying = false;
+  final bool _error = false;
+  int _cooldown = 30;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown();
+  }
+
+  void _startCooldown() {
+    _cooldown = 30;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      setState(() => _cooldown--);
+      if (_cooldown <= 0) t.cancel();
+    });
+  }
+
+  Future<void> _onCompleted(String code) async {
+    setState(() => _verifying = true);
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    setState(() => _verifying = false);
+    widget.prefs.emailVerified = true;
+    widget.onContinue();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'Verify your email',
+      subtitle: 'We sent a 6-digit code to ${widget.prefs.email ?? 'your email'}.',
+      onBack: widget.onBack,
+      onSkip: widget.onSkip,
+      onContinue: () {},
+      continueEnabled: false,
+      continueLabel: _verifying ? 'Verifying...' : 'Enter the code above',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AqaratiOtpField(onCompleted: _onCompleted, hasError: _error),
+          const SizedBox(height: AppSpacing.lg),
+          if (_verifying) const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: _cooldown <= 0 ? _startCooldown : null,
+                child: Text(_cooldown > 0 ? 'Resend code in ${_cooldown}s' : 'Resend code'),
+              ),
+              TextButton(onPressed: widget.onBack, child: const Text('Change email')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PhoneStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _PhoneStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  State<_PhoneStep> createState() => _PhoneStepState();
+}
+
+class _PhoneStepState extends State<_PhoneStep> {
+  late final _controller = TextEditingController(text: widget.prefs.phone ?? '');
+  bool _loading = false;
+  String? _error;
+
+  bool get _isValid => RegExp(r'^\d{8}$').hasMatch(_controller.text.trim());
+
+  Future<void> _submit() async {
+    if (!_isValid) {
+      setState(() => _error = 'Enter a valid 8-digit Oman mobile number.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    widget.prefs.phone = '+968 ${_controller.text.trim()}';
+    widget.onContinue();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: "What's your mobile number?",
+      subtitle: "We'll use this for important account and property updates.",
+      onBack: widget.onBack,
+      onSkip: widget.onSkip,
+      onContinue: _submit,
+      continueEnabled: !_loading,
+      continueLabel: 'Send code',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Mobile number', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.line),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: const Text('+968'),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => setState(() => _error = null),
+                  decoration: InputDecoration(hintText: '9XXXXXXX', errorText: _error),
+                ),
+              ),
+            ],
+          ),
+          if (_loading) ...[
+            const SizedBox(height: AppSpacing.lg),
+            const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PhoneOtpStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _PhoneOtpStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  State<_PhoneOtpStep> createState() => _PhoneOtpStepState();
+}
+
+class _PhoneOtpStepState extends State<_PhoneOtpStep> {
+  bool _verifying = false;
+  final bool _error = false;
+  int _cooldown = 30;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown();
+  }
+
+  void _startCooldown() {
+    _cooldown = 30;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      setState(() => _cooldown--);
+      if (_cooldown <= 0) t.cancel();
+    });
+  }
+
+  Future<void> _onCompleted(String code) async {
+    setState(() => _verifying = true);
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    setState(() => _verifying = false);
+    widget.prefs.phoneVerified = true;
+    widget.onContinue();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'Verify your number',
+      subtitle: 'Enter the 6-digit code sent to ${widget.prefs.phone ?? 'your number'}.',
+      onBack: widget.onBack,
+      onSkip: widget.onSkip,
+      onContinue: () {},
+      continueEnabled: false,
+      continueLabel: _verifying ? 'Verifying...' : 'Enter the code above',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AqaratiOtpField(onCompleted: _onCompleted, hasError: _error),
+          const SizedBox(height: AppSpacing.lg),
+          if (_verifying) const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: _cooldown <= 0 ? _startCooldown : null,
+                child: Text(_cooldown > 0 ? 'Resend code in ${_cooldown}s' : 'Resend code'),
+              ),
+              TextButton(onPressed: widget.onBack, child: const Text('Change number')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NameStep extends StatefulWidget {
+  final OnboardingPreferences prefs;
+  final VoidCallback onBack, onContinue, onSkip;
+
+  const _NameStep({required this.prefs, required this.onBack, required this.onContinue, required this.onSkip});
+
+  @override
+  State<_NameStep> createState() => _NameStepState();
+}
+
+class _NameStepState extends State<_NameStep> {
+  late final _controller = TextEditingController(text: widget.prefs.fullName ?? '');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _OnboardingScaffold(
+      title: 'What should we call you?',
+      onBack: widget.onBack,
+      onSkip: widget.onSkip,
+      continueEnabled: _controller.text.trim().isNotEmpty,
+      onContinue: () {
+        widget.prefs.fullName = _controller.text.trim();
+        widget.onContinue();
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Full name', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _controller,
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(hintText: 'Ameen Syed'),
+          ),
         ],
       ),
     );

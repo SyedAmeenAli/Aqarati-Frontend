@@ -53,13 +53,22 @@ class OnboardingPreferences {
   BudgetBucket? budget;
   int? bedrooms; // null = "Any"
 
+  String? email;
+  bool emailVerified = false;
+  String? phone;
+  bool phoneVerified = false;
+  String? fullName;
+
   bool get hasAnyAnswer =>
       userRole != null ||
       transactionType != null ||
       propertyTypes.isNotEmpty ||
       services.isNotEmpty ||
       locations.isNotEmpty ||
-      budget != null;
+      budget != null ||
+      email != null ||
+      phone != null ||
+      (fullName != null && fullName!.isNotEmpty);
 }
 
 const List<String> omanPopularLocations = [
