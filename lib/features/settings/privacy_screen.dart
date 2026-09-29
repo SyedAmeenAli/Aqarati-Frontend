@@ -175,7 +175,7 @@ class _DocumentVaultScreen extends StatelessWidget {
                 Text('Secured Document Vault', style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Any verification files you upload (such as Omani National ID, passport, or ownership deeds) are fully encrypted and only visible during official leasing or verification processes.',
+                  'Any verification files you upload (such as your passport or ownership deeds) are fully encrypted and only visible during official leasing or verification processes.',
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -293,7 +293,7 @@ class _DataOptionsScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('Deleting your AQARATI account is irreversible'),
         content: const Text(
-          'All bookmarked properties in Muscat, Salalah, and Sohar will lose digital verification links. Active tenancy contracts and verified THEQA information will be disconnected.',
+          'All bookmarked properties in Muscat, Salalah, and Sohar will lose digital verification links. Active tenancy contracts and verified identity information will be disconnected.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel and Keep Account')),

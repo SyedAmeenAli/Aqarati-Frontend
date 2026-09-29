@@ -1,10 +1,10 @@
 import 'enums.dart';
 
-/// Identity verification via THEQA (Oman digital identity) — authentication
-/// mechanism only. Never conflate with property or business verification.
+/// Aqarati's own identity verification — authentication mechanism only.
+/// Never conflate with property or business verification.
 class IdentityVerification {
   final VerificationStatus status;
-  final String? method; // e.g. "qr" or "push" — represents intended THEQA flow
+  final String? method;
   final DateTime? confirmedAt;
 
   const IdentityVerification({

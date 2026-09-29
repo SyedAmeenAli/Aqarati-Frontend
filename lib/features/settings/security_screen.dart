@@ -31,8 +31,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
           const SizedBox(height: AppSpacing.xl),
           _SettingsTile(
             icon: Icons.shield_outlined,
-            title: 'THEQA Identity',
-            subtitle: 'Oman National PKI · Connected',
+            title: 'Identity Verification',
+            subtitle: 'Connected',
             trailing: _StatusPill(label: 'Connected', color: AppColors.verified),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const VerificationCenterScreen()),
@@ -51,7 +51,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           _SettingsTile(
             icon: Icons.history_rounded,
             title: 'Sign-In Activity',
-            subtitle: 'Last event: identity verified via THEQA yesterday',
+            subtitle: 'Last event: identity verified yesterday',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const _SignInActivityScreen()),
             ),
@@ -161,7 +161,7 @@ class _ActiveSessionsScreen extends StatelessWidget {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(content: Text('Signed out of all other devices')));
                       },
-                      child: const Text('Use THEQA'),
+                      child: const Text('Verify identity'),
                     ),
                   ],
                 ),
@@ -182,7 +182,7 @@ class _SignInActivityScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final events = [
       ('Signed in', 'Safari · MacBook Pro 16', 'Today, 9:41 AM · Muscat, Oman', Icons.login_rounded),
-      ('Identity verified via THEQA', 'National Single Sign-On system', 'Yesterday, 3:15 PM · Oman', Icons.verified_user_outlined),
+      ('Identity verified', 'Aqarati Verification', 'Yesterday, 3:15 PM · Oman', Icons.verified_user_outlined),
       ('Password changed', 'Secure self-service portal', '3 days ago · Muscat, Oman', Icons.key_outlined),
       ('New device added', 'iPhone 15 Pro authenticated', 'Last week, Jan 15 · Muscat, Oman', Icons.add_to_home_screen_outlined),
     ];

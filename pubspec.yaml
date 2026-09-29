@@ -101,7 +101,6 @@ flutter:
     - assets/businesses/b4/
     - assets/location/
     - assets/ads/
-    - assets/theqa/
     - assets/onboarding/
 
   # An image asset can refer to one or more resolution-specific "variants", see

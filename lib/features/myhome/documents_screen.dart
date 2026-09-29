@@ -303,7 +303,7 @@ class LandTitleDeedScreen extends StatelessWidget {
               Text('Secure Document Vault', style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Only you can access this document through AQARATI. Your real estate credentials are encrypted utilizing state-of-the-art secure Omani national ID systems.',
+                'Only you can access this document through AQARATI. Your real estate credentials are encrypted and securely stored.',
                 style: theme.textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),

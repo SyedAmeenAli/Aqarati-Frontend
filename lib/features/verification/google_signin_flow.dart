@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 
-/// Google sign-in as a second option alongside THEQA. No real Google OAuth
+/// Google sign-in as a second option alongside Aqarati identity verification. No real Google OAuth
 /// client is configured (no backend yet) — this mirrors
 /// IdentityVerificationFlow's own honesty pattern: real frontend states,
 /// a picked mock account, ready to wire to real `google_sign_in` /

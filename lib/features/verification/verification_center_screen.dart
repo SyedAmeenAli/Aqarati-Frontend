@@ -7,7 +7,7 @@ import '../../data/models/enums.dart';
 import 'identity_verification_flow.dart';
 import 'property_verification_flow.dart';
 
-/// Trust model kept strictly separate per spec: identity (THEQA) vs business
+/// Trust model kept strictly separate per spec: identity vs business
 /// vs property verification are three different questions, never conflated.
 class VerificationCenterScreen extends StatefulWidget {
   const VerificationCenterScreen({super.key});

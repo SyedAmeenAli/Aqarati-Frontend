@@ -161,7 +161,7 @@ class _DrawerHeader extends ConsumerWidget {
                     }
                   },
                   child: Text(
-                    'Continue with THEQA',
+                    'Verify identity',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, decoration: TextDecoration.underline),
                   ),
                 ),
@@ -189,7 +189,7 @@ class _DrawerHeader extends ConsumerWidget {
             )
           else
             Text(
-              'Verified via THEQA',
+              'Identity verified',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
             ),
         ],

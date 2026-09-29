@@ -41,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
           Text('Identity & Security', style: theme.textTheme.labelMedium),
           const SizedBox(height: AppSpacing.sm),
           _SettingsGroup(children: [
-            _SettingsRow(icon: Icons.verified_user_outlined, title: 'THEQA Digital Identity', trailingText: 'Connected', onTap: () => Navigator.of(context).push(
+            _SettingsRow(icon: Icons.verified_user_outlined, title: 'Identity Verification', trailingText: 'Connected', onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const VerificationCenterScreen()),
             )),
             _SettingsRow(icon: Icons.security_rounded, title: 'Security & PIN', onTap: () => Navigator.of(context).push(

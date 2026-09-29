@@ -71,7 +71,7 @@ class AboutScreen extends StatelessWidget {
               noticeText: '[Privacy policy content to be provided before launch]',
               noticeColor: AppColors.secondary,
               sections: [
-                ('I. Information Collection Scope', 'Drafted to specify national ID systems, contact preferences, and location data collection boundaries.'),
+                ('I. Information Collection Scope', 'Drafted to specify identity verification, contact preferences, and location data collection boundaries.'),
                 ('II. Use of Personal Data', 'Outlining processing protocols for property ownership registration verifications and escrow operations.'),
                 ('III. Data Security & Storage', 'Governing physical and digital storage of data strictly on domestic server farms within the Sultanate of Oman.'),
               ],
@@ -101,7 +101,7 @@ class _ProductInfoScreen extends StatelessWidget {
   static const _items = [
     (Icons.search_rounded, 'Find Properties', 'Browse verified listings across Muscat, Salalah, Sohar and beyond with transparent pricing in OMR.'),
     (Icons.groups_outlined, 'Discover Professionals', 'Connect directly with verified brokers, local developers, and certified home improvement experts.'),
-    (Icons.verified_outlined, 'Verify Identity', 'Secure integrated digital verification with your Omani civil status system (PKI / National ID).'),
+    (Icons.verified_outlined, 'Verify Identity', 'Secure identity verification so others can trust your listings and messages.'),
     (Icons.request_quote_outlined, 'Request Services', 'Get quotes, book reliable home services, and complete payments securely within the system.'),
     (Icons.house_outlined, 'Manage your home', 'Access your digital deeds, monitor utilities, and maintain your property status from your personal dashboard.'),
   ];

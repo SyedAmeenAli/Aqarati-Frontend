@@ -7,8 +7,8 @@ import '../models/saved.dart';
 import '../models/identity_verification.dart';
 import '../../features/onboarding/onboarding_preferences.dart';
 
-/// The signed-in user — guest until THEQA identity verification succeeds.
-/// Persisted so a completed THEQA verification survives app restarts
+/// The signed-in user — guest until identity verification succeeds.
+/// Persisted so a completed verification survives app restarts
 /// instead of asking again every launch.
 final currentUserProvider = StateNotifierProvider<CurrentUserNotifier, User>((ref) => CurrentUserNotifier());
 

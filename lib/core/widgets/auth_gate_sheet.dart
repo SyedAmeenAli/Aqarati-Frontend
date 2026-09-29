@@ -38,7 +38,7 @@ Future<void> showAuthGateSheet(
           ),
           const SizedBox(height: AppSpacing.xl),
           AqaratiButton(
-            label: 'Continue with THEQA',
+            label: 'Verify identity',
             icon: Icons.fingerprint_rounded,
             fullWidth: true,
             onPressed: () async {

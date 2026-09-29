@@ -22,7 +22,7 @@ class _NotificationPrefsScreenState extends State<NotificationPrefsScreen> {
     'Payment & Invoices': true,
     'Maintenance Requests': false,
     'Ecosystem Security Alerts': true,
-    'Ministry & THEQA Approvals': true,
+    'Verification Approvals': true,
   };
 
   bool _pushNotifications = true;
@@ -62,7 +62,7 @@ class _NotificationPrefsScreenState extends State<NotificationPrefsScreen> {
           const SizedBox(height: AppSpacing.md),
           Text('Security & Verification', style: theme.textTheme.titleSmall),
           const SizedBox(height: AppSpacing.sm),
-          for (final key in ['Ecosystem Security Alerts', 'Ministry & THEQA Approvals'])
+          for (final key in ['Ecosystem Security Alerts', 'Verification Approvals'])
             _ToggleRow(title: key, value: _prefs[key]!, onChanged: (v) => setState(() => _prefs[key] = v)),
           const SizedBox(height: AppSpacing.xl),
           AqaratiButton(

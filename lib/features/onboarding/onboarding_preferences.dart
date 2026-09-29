@@ -3,7 +3,7 @@ import '../../data/models/enums.dart';
 enum BudgetBucket { under50k, from50to150k, from150to300k, custom }
 
 /// Who the user is, asked once during onboarding (or later, if skipped, when
-/// they attempt THEQA) — drives which experience they land in downstream.
+/// they attempt identity verification) — drives which experience they land in downstream.
 enum UserRole { buyerTenant, realEstateAgent, constructionCompany, propertyDeveloper, architectureFirm, interiorDesignStudio }
 
 extension UserRoleLabel on UserRole {

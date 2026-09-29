@@ -41,14 +41,14 @@ class ProfileScreen extends ConsumerWidget {
             user.isGuest
                 ? 'Sign in to save properties, message professionals and manage your home.'
                 : user.identity.isConfirmed
-                    ? 'Verified via THEQA — Oman national digital identity.'
-                    : 'Signed in with Google. Verify with THEQA to unlock listing and messaging.',
+                    ? 'Your identity is verified.'
+                    : 'Signed in with Google. Verify your identity to unlock listing and messaging.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.xl),
           if (!user.identity.isConfirmed)
             AqaratiButton(
-              label: 'Continue with THEQA',
+              label: 'Verify identity',
               icon: Icons.fingerprint_rounded,
               fullWidth: true,
               onPressed: () async {

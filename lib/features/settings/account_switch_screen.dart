@@ -39,7 +39,7 @@ class _AccountSwitchScreenState extends State<AccountSwitchScreen> {
                           const _Pill(label: 'Verified', color: AppColors.verified),
                         ],
                       ),
-                      Text('Omani National ID · ****9847', style: theme.textTheme.bodySmall),
+                      Text('Identity verified', style: theme.textTheme.bodySmall),
                     ],
                   ),
                 ),
