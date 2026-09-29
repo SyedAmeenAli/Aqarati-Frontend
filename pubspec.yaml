@@ -63,6 +63,10 @@ dependencies:
   shared_preferences: ^2.5.5
   fl_chart: ^1.2.0
 
+  # Real property-photo picking (gallery/file). Web-compatible (uses an
+  # <input type=file> under the hood, no native permission dialog needed).
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

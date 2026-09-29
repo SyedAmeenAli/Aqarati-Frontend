@@ -1,5 +1,7 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/aqarati_button.dart';
@@ -31,6 +33,45 @@ class _PropertyCreationFlowState extends ConsumerState<PropertyCreationFlow> {
   final _areaController = TextEditingController();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final List<Uint8List> _photos = [];
+  bool _photosLoading = false;
+  String? _titleDeedFileName;
+  bool _titleDeedLoading = false;
+
+  Future<void> _addPhotos() async {
+    setState(() => _photosLoading = true);
+    try {
+      final picked = await ImagePicker().pickMultiImage(imageQuality: 85);
+      for (final file in picked) {
+        _photos.add(await file.readAsBytes());
+      }
+    } catch (_) {
+      // User cancelled the picker, or the platform declined — nothing to add.
+    } finally {
+      if (mounted) setState(() => _photosLoading = false);
+    }
+  }
+
+  void _removePhoto(int index) => setState(() => _photos.removeAt(index));
+
+  void _setCoverPhoto(int index) => setState(() {
+        final cover = _photos.removeAt(index);
+        _photos.insert(0, cover);
+      });
+
+  Future<void> _pickTitleDeed() async {
+    setState(() => _titleDeedLoading = true);
+    try {
+      final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (file != null) {
+        _titleDeedFileName = file.name;
+      }
+    } catch (_) {
+      // Cancelled or declined.
+    } finally {
+      if (mounted) setState(() => _titleDeedLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -209,10 +250,26 @@ class _PropertyCreationFlowState extends ConsumerState<PropertyCreationFlow> {
           onBack: _back,
           onContinue: _next,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _UploadPlaceholder(icon: Icons.add_photo_alternate_outlined, label: 'Add photos'),
-              const SizedBox(height: AppSpacing.md),
-              _UploadPlaceholder(icon: Icons.upload_file_outlined, label: 'Add title deed'),
+              Text('Photos', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: AppSpacing.sm),
+              _PhotoUploadGrid(
+                photos: _photos,
+                loading: _photosLoading,
+                onAdd: _addPhotos,
+                onRemove: _removePhoto,
+                onSetCover: _setCoverPhoto,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Text('Title deed', style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: AppSpacing.sm),
+              _DocumentUploadTile(
+                fileName: _titleDeedFileName,
+                loading: _titleDeedLoading,
+                onPick: _pickTitleDeed,
+                onRemove: () => setState(() => _titleDeedFileName = null),
+              ),
             ],
           ),
         );
@@ -244,6 +301,13 @@ class _PropertyCreationFlowState extends ConsumerState<PropertyCreationFlow> {
                   'OMR ${_priceController.text.trim()}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primary),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _photos.isEmpty ? 'No photos added' : '${_photos.length} photo${_photos.length == 1 ? '' : 's'} added',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate),
+                ),
+                if (_titleDeedFileName != null)
+                  Text('Title deed: $_titleDeedFileName', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)),
               ],
             ),
           ),
@@ -367,28 +431,194 @@ class _OptionTile extends StatelessWidget {
   }
 }
 
-class _UploadPlaceholder extends StatelessWidget {
-  final IconData icon;
-  final String label;
+/// Real photo grid — add/remove/set-cover all actually mutate state (no
+/// backend to persist to yet, so photos live only for this session/draft).
+class _PhotoUploadGrid extends StatelessWidget {
+  final List<Uint8List> photos;
+  final bool loading;
+  final VoidCallback onAdd;
+  final ValueChanged<int> onRemove;
+  final ValueChanged<int> onSetCover;
 
-  const _UploadPlaceholder({required this.icon, required this.label});
+  const _PhotoUploadGrid({
+    required this.photos,
+    required this.loading,
+    required this.onAdd,
+    required this.onRemove,
+    required this.onSetCover,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.sand,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.line),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 32, color: AppColors.slate),
-          const SizedBox(height: AppSpacing.sm),
-          Text(label, style: Theme.of(context).textTheme.titleSmall),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (photos.isEmpty && !loading)
+          InkWell(
+            onTap: onAdd,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              decoration: BoxDecoration(
+                color: AppColors.sand,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.add_photo_alternate_outlined, size: 32, color: AppColors.slate),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text('Add photos', style: Theme.of(context).textTheme.titleSmall),
+                ],
+              ),
+            ),
+          )
+        else
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              for (var i = 0; i < photos.length; i++)
+                _PhotoThumb(bytes: photos[i], isCover: i == 0, onRemove: () => onRemove(i), onSetCover: () => onSetCover(i)),
+              if (loading)
+                const SizedBox(width: 88, height: 88, child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+              else
+                InkWell(
+                  onTap: onAdd,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: AppColors.sand,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(color: AppColors.line),
+                    ),
+                    child: Icon(Icons.add_rounded, color: AppColors.slate),
+                  ),
+                ),
+            ],
+          ),
+        if (photos.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text('Tap a photo to set it as the cover.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)),
         ],
+      ],
+    );
+  }
+}
+
+class _PhotoThumb extends StatelessWidget {
+  final Uint8List bytes;
+  final bool isCover;
+  final VoidCallback onRemove;
+  final VoidCallback onSetCover;
+
+  const _PhotoThumb({required this.bytes, required this.isCover, required this.onRemove, required this.onSetCover});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onSetCover,
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: SizedBox(
+        width: 88,
+        height: 88,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Image.memory(bytes, fit: BoxFit.cover),
+            ),
+            if (isCover)
+              Positioned(
+                left: 4,
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(4)),
+                  child: Text('Cover', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white)),
+                ),
+              ),
+            Positioned(
+              right: 2,
+              top: 2,
+              child: InkWell(
+                onTap: onRemove,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                  child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Real single-document picker for the title deed slot (image-only — no PDF
+/// library is available in this project, so a photo of the document is what
+/// this actually accepts, which is what the UI says).
+class _DocumentUploadTile extends StatelessWidget {
+  final String? fileName;
+  final bool loading;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  const _DocumentUploadTile({required this.fileName, required this.loading, required this.onPick, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(color: AppColors.sand, borderRadius: BorderRadius.circular(AppRadius.md)),
+        child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+    if (fileName != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.description_outlined, color: AppColors.primary),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(child: Text(fileName!, style: Theme.of(context).textTheme.bodyMedium, overflow: TextOverflow.ellipsis)),
+            IconButton(onPressed: onRemove, icon: const Icon(Icons.close_rounded)),
+          ],
+        ),
+      );
+    }
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: AppColors.sand,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.upload_file_outlined, size: 32, color: AppColors.slate),
+            const SizedBox(height: AppSpacing.sm),
+            Text('Add title deed', style: Theme.of(context).textTheme.titleSmall),
+          ],
+        ),
       ),
     );
   }
