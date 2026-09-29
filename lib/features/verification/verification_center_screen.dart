@@ -39,7 +39,7 @@ class _VerificationCenterScreenState extends State<VerificationCenterScreen> {
           _VerificationTile(
             icon: Icons.fingerprint_rounded,
             title: 'Identity Verification',
-            subtitle: 'Confirm who you are using your Oman digital identity.',
+            subtitle: 'Confirm who you are with your email, phone and passport.',
             status: _identity,
             onTap: () async {
               final result = await Navigator.of(context).push<bool>(

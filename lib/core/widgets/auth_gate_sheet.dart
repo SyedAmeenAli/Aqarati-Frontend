@@ -33,7 +33,7 @@ Future<void> showAuthGateSheet(
           Text('Sign in to continue', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Use your Oman digital identity to securely confirm who you are before you $actionLabel.',
+            'Verify your identity to securely confirm who you are before you $actionLabel.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.xl),
