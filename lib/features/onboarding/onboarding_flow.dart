@@ -1175,10 +1175,15 @@ class _EmailOtpStepState extends State<_EmailOtpStep> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: _cooldown <= 0 ? _startCooldown : null,
                 child: Text(_cooldown > 0 ? 'Resend code in ${_cooldown}s' : 'Resend code'),
               ),
-              TextButton(onPressed: widget.onBack, child: const Text('Change email')),
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
+                onPressed: widget.onBack,
+                child: const Text('Change email'),
+              ),
             ],
           ),
         ],
@@ -1340,10 +1345,15 @@ class _PhoneOtpStepState extends State<_PhoneOtpStep> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: _cooldown <= 0 ? _startCooldown : null,
                 child: Text(_cooldown > 0 ? 'Resend code in ${_cooldown}s' : 'Resend code'),
               ),
-              TextButton(onPressed: widget.onBack, child: const Text('Change number')),
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
+                onPressed: widget.onBack,
+                child: const Text('Change number'),
+              ),
             ],
           ),
         ],
@@ -1682,6 +1692,7 @@ class _KeyDepositIntroStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Center(
             child: TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
               onPressed: () {
                 prefs.keyDepositOptedIn = false;
                 onContinue();
@@ -1923,6 +1934,7 @@ class _PassportIntroStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Center(
             child: TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
               onPressed: () {
                 prefs.passportState = PassportVerificationState.notStarted;
                 onChanged();
