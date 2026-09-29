@@ -6,6 +6,7 @@ import '../../core/widgets/aqarati_button.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/home.dart';
 import 'documents_screen.dart';
+import 'home_utility_screens.dart';
 import 'key_custody_screen.dart';
 
 final myHomesProvider = StateProvider<List<Home>>((ref) => []);
@@ -53,46 +54,6 @@ class MyHomeScreen extends ConsumerWidget {
     );
   }
 
-  void _requestMaintenance(BuildContext context) {
-    final controller = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.lg,
-          bottom: AppSpacing.lg + MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Request maintenance', style: Theme.of(sheetContext).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: controller,
-              maxLines: 3,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Describe the issue'),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            AqaratiButton(
-              label: 'Submit request',
-              fullWidth: true,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Maintenance request submitted')),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildHome(BuildContext context, Home home) {
     final theme = Theme.of(context);
     return ListView(
@@ -131,12 +92,21 @@ class MyHomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: InkWell(
                 onTap: () {
-                  if (s.$2 == 'Documents') {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const DocumentsScreen()));
-                  } else if (s.$2 == 'Key custody') {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const KeyCustodyScreen()));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${s.$2} — coming soon')));
+                  final screen = switch (s.$2) {
+                    'Property' => PropertyOverviewScreen(propertyId: home.propertyId),
+                    'Documents' => const DocumentsScreen(),
+                    'Key custody' => const KeyCustodyScreen(),
+                    'Maintenance' => const MaintenanceScreen(),
+                    'Expenses' => const ExpensesScreen(),
+                    'Renovations' => const RenovationsScreen(),
+                    'Payments' => const PaymentsScreen(),
+                    'Providers' => const ProvidersScreen(),
+                    'Warranty' => const WarrantyScreen(),
+                    'History' => const HistoryScreen(),
+                    _ => null,
+                  };
+                  if (screen != null) {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => screen));
                   }
                 },
                 borderRadius: BorderRadius.circular(AppRadius.md),
@@ -171,7 +141,7 @@ class MyHomeScreen extends ConsumerWidget {
           label: 'Request maintenance',
           variant: AqaratiButtonVariant.secondary,
           fullWidth: true,
-          onPressed: () => _requestMaintenance(context),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MaintenanceScreen())),
         ),
       ],
     );
